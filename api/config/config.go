@@ -26,10 +26,10 @@ type AuthConfig struct {
 	Issuer   string `envconfig:"MFS_AUTH_ISSUER",json:"issuer"`
 }
 type AppConfig struct {
-	AppPort  string `envconfig:"MFS_APP_PORT",json:"appPort"`
-	TestMode	bool	`envconfig:"MFS_TEST_MODE",json:"testMode"`
-	MaxFileSize	int64	`envconfig:"MFS_MAX_FILE_SIZE",json:"maxFileSize"`
-	PathPrefix	string	`envconfig:"MFS_PATH_PREFIX",json:"pathPrefix"`
+	AppPort     string `envconfig:"MFS_APP_PORT",json:"appPort"`
+	TestMode    bool   `envconfig:"MFS_APP_TEST_MODE",json:"testMode"`
+	MaxFileSize int64  `envconfig:"MFS_APP_MAX_FILE_SIZE",json:"maxFileSize"`
+	PathPrefix  string `envconfig:"MFS_APP_PATH_PREFIX",json:"pathPrefix"`
 }
 
 func GetConfig() *Config {
