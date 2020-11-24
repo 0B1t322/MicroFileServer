@@ -2,6 +2,7 @@ package server
 
 import (
 	"MicroFileServer/config"
+	"MicroFileServer/utils"
 	"context"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -22,15 +23,14 @@ var cfg *config.Config
 
 func (a *App) Init(config *config.Config) {
 	cfg = config
-	log.Info("Little Big File Server is starting up!")
-	DBUri := "mongodb://" + cfg.DB.Host + ":" + cfg.DB.DBPort
-	log.WithField("dburi", DBUri).Info("Current database URI: ")
-	client, err := mongo.NewClient(options.Client().ApplyURI(DBUri))
+	log.Info("Micro File Server is starting up!")
+	log.WithField("dburi", cfg.DB.URI).Info("Current database URI: ")
+	client, err := mongo.NewClient(options.Client().ApplyURI(cfg.DB.URI))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"function" : "mongo.NewClient",
 			"error"	:	err,
-			"db_uri":	DBUri,
+			"db_uri":	cfg.DB.URI,
 		},
 		).Fatal("Failed to create new MongoDB client")
 	}
@@ -53,14 +53,17 @@ func (a *App) Init(config *config.Config) {
 		).Fatal("Failed to ping MongoDB")
 	}
 	log.Info("Connected to MongoDB!")
+
+	dbName := utils.GetDbName(cfg.DB.URI)
+	dbCollectionName := "fs.files"
 	log.WithFields(log.Fields{
-		"db_name" : cfg.DB.DBName,
-		"collection_name" : cfg.DB.CollectionName,
+		"db_name" : dbName,
+		"collection_name" : dbCollectionName,
 	}).Info("Database information: ")
 	log.WithField("testMode", cfg.App.TestMode).Info("Let's check if test mode is on...")
 
-	collection = client.Database(cfg.DB.DBName).Collection(cfg.DB.CollectionName)
-	db = client.Database(cfg.DB.DBName)
+	collection = client.Database(dbName).Collection(dbCollectionName)
+	db = client.Database(dbName)
 	a.Router = mux.NewRouter().PathPrefix(cfg.App.PathPrefix).Subrouter()
 	a.setRouters()
 }
