@@ -5,39 +5,35 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/gridfs"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"io"
 	"io/ioutil"
 	"net/http"
-	"strconv"
+	"strings"
 	"time"
 )
-
-
 
 func downloadFile(w http.ResponseWriter, r *http.Request) {
 	var downloadedFile models.File
 
 	data := mux.Vars(r)
-	objID, err := primitive.ObjectIDFromHex(string(data["id"]))
+	objID, err := primitive.ObjectIDFromHex(data["id"])
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 	filter := bson.M{"_id": objID}
-
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	err = collection.FindOne(ctx, filter).Decode(&downloadedFile)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
-
 	fileName := downloadedFile.FileName
 	buf := bytes.NewBuffer(nil)
 	bucket, _ := gridfs.NewBucket(db)
@@ -55,22 +51,26 @@ func downloadFile(w http.ResponseWriter, r *http.Request) {
 	},
 	).Info("File size to download: ")
 
-	w.Header().Set("Content-Disposition", "attachment; filename=\""+fileName+"\"")
-	w.Header().Set("Content-Length", strconv.FormatInt(downloadedFile.Length, 10))
-	io.Copy(w, buf)
+	mime := mimetype.Detect(buf.Bytes())
+	if !strings.Contains(mime.String(), "video") && !strings.Contains(mime.String(), "audio") {
+		w.Header().Set("Content-Type", mime.String())
+		w.Header().Set("Content-Disposition", "attachment; filename=\""+fileName+"\"")
+	}
+	http.ServeContent(w, r, fileName, time.Now(), bytes.NewReader(buf.Bytes()))
 }
 
 func uploadFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-
-	r.Body = http.MaxBytesReader(w, r.Body, 30 * 1024 * 1024)
+	r.Body = http.MaxBytesReader(w, r.Body, cfg.App.MaxFileSize * 1024 * 1024)
 	data, handler, err := r.FormFile("uploadingForm")
 	if err != nil {
-		w.Write([]byte("File is too big! (Max size: 30MB)"))
+		w.Write([]byte("File is not appropriate!"))
+		w.WriteHeader(400)
 		log.WithFields(log.Fields{
 			"err" : err,
+			"maxSizeInMB" : cfg.App.MaxFileSize,
 		},
-		).Info("File is too big! (Max size: 30MB)")
+		).Info("File is not appropriate!")
 		return
 	}
 	defer data.Close()
@@ -108,7 +108,6 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 		).Warn("Can't open upload stream!")
 		return
 	}
-	defer uploadStream.Close()
 
 	fileSize, err := uploadStream.Write(fileBytes)
 	if err != nil {
@@ -124,20 +123,31 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 		"fileSize" : fileSize,
 	},
 	).Info("Write file to DB was successful. File size: ")
-	w.Write([]byte("Successfully uploaded file!"))
+
+	fileID := uploadStream.FileID
+	uploadStream.Close()
+	var file models.File
+	filter := bson.M{"_id" : fileID}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	err = collection.FindOne(ctx, filter).Decode(&file)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	json.NewEncoder(w).Encode(file)
 }
 
 func deleteFile(w http.ResponseWriter, r *http.Request) {
 	var requiredFile models.File
 	data := mux.Vars(r)
 
-	objID, err := primitive.ObjectIDFromHex(string(data["id"]))
+	objID, err := primitive.ObjectIDFromHex(data["id"])
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 	filter := bson.M{"_id": objID}
-
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	err = collection.FindOne(ctx, filter).Decode(&requiredFile)
 	if err != nil {
@@ -165,8 +175,8 @@ func deleteFile(w http.ResponseWriter, r *http.Request) {
 			},
 			).Fatal("DB interaction resulted in error, shutting down...")
 		}
-		w.WriteHeader(200)
 		w.Write([]byte("Successfully deleted file!"))
+		w.WriteHeader(200)
 	} else {
 		w.WriteHeader(403)
 		return
@@ -175,10 +185,29 @@ func deleteFile(w http.ResponseWriter, r *http.Request) {
 
 func getFilesList(w http.ResponseWriter, r *http.Request) {
 	files := make([]models.File, 0)
+	var filter bson.M
+
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
+	switch {
+	case isAdmin():
+		filter = bson.M{}
+	case isUser():
+		filter = bson.M{
+			"metadata.fileSender": Claims.Sub,
+		}
+	}
+	data := mux.Vars(r)
+	sortVar := data["var"]
+	findOptions := options.Find()
+	switch sortVar {
+	case "name":
+		findOptions.SetSort(bson.M{"metadata.fileSender": 1})
+	case "date":
+		findOptions.SetSort(bson.M{"uploadDate": 1})
+	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	cur, err := collection.Find(ctx, bson.M{})
+	cur, err := collection.Find(ctx, filter, findOptions)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"function" : "mongo.Find",
@@ -213,8 +242,10 @@ func getFilesListForUser(w http.ResponseWriter, r *http.Request) {
 		filter := bson.M{
 			"metadata.fileSender" : user,
 		}
+		findOptions := options.Find()
+		findOptions.SetSort(bson.M{"uploadDate": 1})
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-		cur, err := collection.Find(ctx, filter)
+		cur, err := collection.Find(ctx, filter, findOptions)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"function" : "mongo.Find",
@@ -248,14 +279,12 @@ func getFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	data := mux.Vars(r)
-	objID, err := primitive.ObjectIDFromHex(string(data["id"]))
+	objID, err := primitive.ObjectIDFromHex(data["id"])
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
-
 	filter := bson.M{"_id" : objID}
-
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	err = collection.FindOne(ctx, filter).Decode(&file)
 	if err != nil {
@@ -263,10 +292,5 @@ func getFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if file.Metadata.FileSender == Claims.Sub || isAdmin() {
-		json.NewEncoder(w).Encode(file)
-	} else {
-		w.WriteHeader(403)
-		return
-	}
+	json.NewEncoder(w).Encode(file)
 }

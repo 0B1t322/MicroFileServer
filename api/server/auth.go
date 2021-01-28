@@ -3,6 +3,7 @@ package server
 import (
 	"MicroFileServer/logging"
 	"MicroFileServer/models"
+	"errors"
 	"github.com/auth0-community/go-auth0"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/square/go-jose.v2"
@@ -10,6 +11,14 @@ import (
 )
 var validator *auth0.JWTValidator
 var Claims	models.Claims
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		sw := logging.NewStatusWriter(w)
+		next.ServeHTTP(sw, r)
+		logging.LogHandler(sw, r)
+	})
+}
 
 func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -30,8 +39,7 @@ func authMiddleware(next http.Handler) http.Handler {
 			w.Write([]byte(err.Error()))
 			return
 		}
-
-		Claims = models.Claims{}
+		Claims.ITLab = nil
 		err = getClaims(r)
 		if err != nil {
 			log.WithFields(log.Fields{
@@ -45,17 +53,6 @@ func authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		if !checkScope(cfg.Auth.Scope) {
-			log.WithFields(log.Fields{
-				"requiredScope" : cfg.Auth.Scope,
-				"error" : err,
-			}).Warning("Invalid scope!")
-
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("Invalid scope"))
-			return
-		}
-
 		if !isUser() {
 			log.WithFields(log.Fields{
 				"Claims.ITLab" : Claims.ITLab,
@@ -65,7 +62,6 @@ func authMiddleware(next http.Handler) http.Handler {
 			w.Write([]byte("Wrong itlab claim!"))
 			return
 		}
-
 		sw := logging.NewStatusWriter(w)
 		next.ServeHTTP(sw, r)
 		logging.LogHandler(sw, r)
@@ -90,21 +86,19 @@ func testAuthMiddleware(next http.Handler) http.Handler {
 			w.Write([]byte(err.Error()))
 			return
 		}
+		Claims.ITLab = nil
 		getClaims(r)
+
+		log.Info(Claims.ITLab)
+		log.Info(Claims.Sub)
+
 		sw := logging.NewStatusWriter(w)
 		next.ServeHTTP(sw, r)
 		logging.LogHandler(sw, r)
 	})
 }
 
-func checkScope(scope string) bool {
-	for _, elem := range Claims.Scope {
-		if elem == scope {
-			return true
-		}
-	}
-	return false
-}
+
 
 func getClaims(r *http.Request) error {
 	token, err := validator.ValidateRequest(r)
@@ -112,6 +106,22 @@ func getClaims(r *http.Request) error {
 		return err
 	}
 	err = validator.Claims(r, token, &Claims)
+
+	switch Claims.ITLabInterface.(type) {
+	case string:
+		claimString := Claims.ITLabInterface.(string)
+		Claims.ITLab = []string{claimString}
+	case []interface{}:
+		claimInterface, ok := Claims.ITLabInterface.([]interface{})
+		claimString := make([]string, len(claimInterface))
+		for i, v := range claimInterface {
+			claimString[i], ok = v.(string)
+			if !ok { return errors.New("itLab claim is invalid") }
+		}
+		if ok { Claims.ITLab = claimString }
+	default:
+		return errors.New("itLab claim is invalid")
+	}
 	return nil
 }
 
@@ -126,7 +136,7 @@ func isUser() bool {
 
 func isAdmin() bool {
 	for _, elem := range Claims.ITLab {
-		if elem == "reports.admin" {
+		if elem == "mfs.admin" {
 			return true
 		}
 	}
