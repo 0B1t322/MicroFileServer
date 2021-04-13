@@ -7,11 +7,6 @@ trigger:
 resources:
 - repo: self
 
-variables:
-  tag: '$(Build.BuildId)'
-  CGO_ENABLED: 0
-  GOOS: linux
-
 stages:
 - stage: Build
   displayName: Build image
