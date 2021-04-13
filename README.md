@@ -12,10 +12,10 @@ File ```config.json``` must contain next content:
     "uri": "mongodb://user:password@localhost:27017/MicroFileServer", //uri connection string | env: MFS_MONGO_URI
   },
   "AppOptions": {
-    "testMode": true|false, //bool option for enabling Tests mode | env: MFS_TEST_MODE
+    "testMode": true|false, //bool option for enabling Tests mode | env: MFS_APP_TEST_MODE
     "appPort": "8080", //app port | env: MFS_APP_PORT
-    "maxFileSize": 100, //maximum file size for upload in MB | env: MFS_MAX_FILE_SIZE
-    "pathPrefix": "/example"    //URL path prefix | env: MFS_PATH_PREFIX
+    "maxFileSize": 100, //maximum file size for upload in MB | env: MFS_APP_MAX_FILE_SIZE
+    "pathPrefix": "/example"    //URL path prefix | env: MFS_APP_PATH_PREFIX
   }
 }
 ```
