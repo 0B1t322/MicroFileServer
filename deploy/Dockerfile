@@ -8,7 +8,7 @@ RUN apk update \
 
 WORKDIR /app
 
-COPY MicroFileServer/microfileserver-api-build/main ./main
+COPY ./main ./main
 
 RUN chmod +x main
 
