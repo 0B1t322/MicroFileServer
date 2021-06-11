@@ -62,21 +62,23 @@ stages:
   jobs:
   - job: build
     displayName: Build
-    strategy:
-      matrix:
-        docker-hub:
-          containerRegistry: 'rtuitlab connection by admin'
-          repository: 'rtuitlab/mfs'
-        private-hub:
-          containerRegistry: 'private rtuitlab registry'
-          repository: 'registry.rtuitlab.dev/rtuitlab/mfs'
     steps:
     - download: current
       artifact: itlab-mfs-build
     - task: Docker@2
+      displayName: Publish to docker hub
       inputs:
-        containerRegistry: $(containerRegistry)
-        repository: $(repository)
+        containerRegistry: 'rtuitlab connection by admin'
+        repository: 'rtuitlab/mfs'
+        command: 'buildAndPush'
+        Dockerfile: '$(Pipeline.Workspace)/itlab-mfs-build/Dockerfile'
+        buildContext: '$(Pipeline.Workspace)/itlab-mfs-build'
+        tags: ${{variables.ImageTags}}
+    - task: Docker@2
+      displayName: Publish to private docker registry
+      inputs:
+        containerRegistry: 'private rtuitlab registry'
+        repository: 'registry.rtuitlab.dev/rtuitlab/mfs'
         command: 'buildAndPush'
         Dockerfile: '$(Pipeline.Workspace)/itlab-mfs-build/Dockerfile'
         buildContext: '$(Pipeline.Workspace)/itlab-mfs-build'
