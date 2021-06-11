@@ -65,15 +65,17 @@ stages:
     strategy:
       matrix:
         docker-hub:
+          containerRegistry: 'rtuitlab connection by admin'
           repository: 'rtuitlab/mfs'
         private-hub:
+          containerRegistry: 'private rtuitlab registry'
           repository: 'registry.rtuitlab.dev/rtuitlab/mfs'
     steps:
     - download: current
       artifact: itlab-mfs-build
     - task: Docker@2
       inputs:
-        containerRegistry: 'rtuitlab connection by admin'
+        containerRegistry: $(containerRegistry)
         repository: $(repository)
         command: 'buildAndPush'
         Dockerfile: '$(Pipeline.Workspace)/itlab-mfs-build/Dockerfile'
@@ -96,5 +98,5 @@ stages:
                 inputs:
                   sshEndpoint: 'swarm manager'
                   runOptions: 'commands'
-                  commands: 'docker service update --image rtuitlab/mfs:$(Build.BuildId) ${{variables.serviceName}} --with-registry-auth'
+                  commands: 'docker service update --image registry.rtuitlab.dev/rtuitlab/mfs:$(Build.BuildId) ${{variables.serviceName}} --with-registry-auth'
                   readyTimeout: '20000'
