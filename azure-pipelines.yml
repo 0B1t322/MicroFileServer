@@ -78,7 +78,7 @@ stages:
       displayName: Publish to private docker registry
       inputs:
         containerRegistry: 'private rtuitlab registry'
-        repository: 'registry.rtuitlab.dev/rtuitlab/mfs'
+        repository: 'rtuitlab/mfs'
         command: 'buildAndPush'
         Dockerfile: '$(Pipeline.Workspace)/itlab-mfs-build/Dockerfile'
         buildContext: '$(Pipeline.Workspace)/itlab-mfs-build'
