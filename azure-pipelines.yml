@@ -8,9 +8,30 @@ resources:
 - repo: self
 
 variables:
-  tag: '$(Build.BuildId)'
   CGO_ENABLED: 0
   GOOS: linux
+  ${{ if notIn(variables['Build.SourceBranchName'], 'master', 'develop') }}:
+    buildImage: false
+    deployService: false
+    deployEnvironment: 'no'
+    imageTags: 'no'
+    serviceName: 'no'
+  ${{ if eq(variables['Build.SourceBranchName'], 'develop') }}:
+    buildImage: true
+    deployService: true
+    deployEnvironment: development
+    imageTags: |
+      $(Build.BuildId)
+      develop
+    serviceName: itlab-develop_mfs
+  ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
+    buildImage: true
+    deployService: true
+    deployEnvironment: production
+    imageTags: |
+      $(Build.BuildId)
+      latest
+    serviceName: itlab_mfs
 
 stages:
 - stage: Build
@@ -27,15 +48,57 @@ stages:
         command: 'build'
         arguments: '-a -installsuffix cgo -o $(Build.ArtifactStagingDirectory)/main -v'
         workingDirectory: 'api'
-    - task: PublishPipelineArtifact@1
-      displayName: 'Publish build artifact'
+    - task: CopyFiles@2
       inputs:
-        targetPath: '$(Build.ArtifactStagingDirectory)'
-        artifact: 'microfileserver-api-build'
-        publishLocation: 'pipeline'
-    - task: PublishPipelineArtifact@1
-      displayName: 'Publish deploy artifact'
+        SourceFolder: 'deploy'
+        Contents: 'Dockerfile'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
+        OverWrite: true
+    - publish: $(Build.ArtifactStagingDirectory)
+      artifact: itlab-mfs-build
+- stage: buildImage
+  condition: and(succeeded(), ${{variables.buildImage}})
+  displayName: Pack docker image
+  jobs:
+  - job: build
+    displayName: Build
+    steps:
+    - download: current
+      artifact: itlab-mfs-build
+    - task: Docker@2
+      displayName: Publish to docker hub
       inputs:
-        targetPath: 'deploy'
-        artifact: 'microfileserver-api-deploy'
-        publishLocation: 'pipeline'
+        containerRegistry: 'rtuitlab connection by admin'
+        repository: 'rtuitlab/mfs'
+        command: 'buildAndPush'
+        Dockerfile: '$(Pipeline.Workspace)/itlab-mfs-build/Dockerfile'
+        buildContext: '$(Pipeline.Workspace)/itlab-mfs-build'
+        tags: ${{variables.ImageTags}}
+    - task: Docker@2
+      displayName: Publish to private docker registry
+      inputs:
+        containerRegistry: 'private rtuitlab registry'
+        repository: 'rtuitlab/mfs'
+        command: 'buildAndPush'
+        Dockerfile: '$(Pipeline.Workspace)/itlab-mfs-build/Dockerfile'
+        buildContext: '$(Pipeline.Workspace)/itlab-mfs-build'
+        tags: ${{variables.ImageTags}}
+- stage: deploy
+  displayName: Deploy
+  condition: and(succeeded(), ${{variables.deployService}})
+  jobs:
+    - deployment: Deploy
+      pool:
+        vmImage: 'ubuntu-latest'
+      environment: ${{variables.deployEnvironment}}
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              - download: none
+              - task: SSH@0
+                inputs:
+                  sshEndpoint: 'swarm manager'
+                  runOptions: 'commands'
+                  commands: 'docker service update --image registry.rtuitlab.dev/rtuitlab/mfs:$(Build.BuildId) ${{variables.serviceName}} --with-registry-auth'
+                  readyTimeout: '20000'
