@@ -7,8 +7,8 @@ type File struct {
 	Length		 int64				`json:"length"`
 	ChunkSize	 int				`json:"chunkSize"`
 	UploadDate	 primitive.DateTime `json:"uploadDate"`
-	FileName	 string            `json:"filename" `
-	Metadata	 Metadata		`json:"metadata"`
+	FileName	 string            	`json:"filename" `
+	Metadata	 Metadata			`json:"metadata"`
 }
 
 type Metadata struct {

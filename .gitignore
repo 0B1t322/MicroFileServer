@@ -1,3 +1,7 @@
 auth_config.json
 .DC_Store
 .idea
+mongodb_data
+.env
+
+workspace.code-workspace
