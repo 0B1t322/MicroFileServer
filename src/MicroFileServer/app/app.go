@@ -11,7 +11,6 @@ import (
 
 	"github.com/MicroFileServer/pkg/apibuilder"
 	"github.com/MicroFileServer/pkg/config"
-	"github.com/go-kit/kit/endpoint"
 	kl "github.com/go-kit/kit/log"
 	klogrus "github.com/go-kit/kit/log/logrus"
 	"github.com/MicroFileServer/service/middleware/auth"
@@ -22,7 +21,7 @@ type App struct {
 	Repository		*repositories.Repositories
 	Port			string
 	Logger			kl.Logger
-	auth			endpoint.Middleware
+	auth			*auth.Auth
 
 }
 
@@ -48,7 +47,7 @@ func New(cfg *config.Config) *App {
 	app.Router = mux.NewRouter().PathPrefix("/api/projects").Subrouter()
 	if !cfg.App.TestMode {
 		log.SetLevel(log.InfoLevel)
-		app.auth = auth.NewGoKitAuth(cfg.Auth)
+		app.auth = auth.NewAuth(cfg.Auth)
 	} else {
 		log.SetLevel(log.DebugLevel)
 	}

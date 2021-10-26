@@ -20,4 +20,3 @@ func (g *GridFS) NewBucket(
 
 	return gridfs.NewBucket(db, opts...)
 }
-

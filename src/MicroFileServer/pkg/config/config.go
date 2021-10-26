@@ -26,8 +26,8 @@ type AuthConfig struct {
 }
 
 type RolesConfig struct {
-	// looks like roles = "admin user" parse to ["admin", "user"]
-	Roles string			`envconfig:"ITLAB_PROJECTS_ROLES" json:"roles"`
+	UserRole		string	`envconfig:"MFS_AUTH_ROLE_USER" json:"user_role"`
+	AdminRole		string	`envconfig:"MFS_AUTH_ROLE_ADMIN" json:"admin_role"`
 }
 
 type AppConfig struct {

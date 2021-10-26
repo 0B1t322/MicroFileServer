@@ -1,7 +1,7 @@
 package apibuilder
 
 import (
-	"github.com/go-kit/kit/endpoint"
+	"github.com/MicroFileServer/service/middleware/auth"
 	"github.com/go-kit/kit/log"
 	"github.com/gorilla/mux"
 )
@@ -9,7 +9,7 @@ import (
 type ApiBulder interface {
 	Build(*mux.Router)
 	CreateServices()
-	AddAuthMiddleware(endpoint.Middleware)
+	AddAuthMiddleware(auth.Auther)
 	AddLogger(log.Logger)
 }
 

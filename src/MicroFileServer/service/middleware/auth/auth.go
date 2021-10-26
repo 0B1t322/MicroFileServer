@@ -1,101 +1,194 @@
 package auth
 
 import (
-	"strings"
-	"regexp"
 	"context"
 	"fmt"
 	"net/http"
+	"sort"
+	"strings"
+	"time"
 
+	"github.com/MicroFileServer/pkg/contextvalue/rolecontext"
+	"github.com/MicroFileServer/pkg/contextvalue/subcontext"
+	"github.com/MicroFileServer/pkg/utils"
+
+	"github.com/MicahParks/keyfunc"
+
+	ctxtoken "github.com/MicroFileServer/pkg/contextvalue/token"
 	"github.com/MicroFileServer/pkg/statuscode"
 
-	"github.com/auth0-community/go-auth0"
 	"github.com/go-kit/kit/endpoint"
-	"gopkg.in/square/go-jose.v2"
+	"github.com/golang-jwt/jwt/v4"
 
 	"github.com/MicroFileServer/pkg/config"
-	"github.com/MicroFileServer/pkg/contextvalue/rolecontext"
-	ctxtoken "github.com/MicroFileServer/pkg/contextvalue/token"
 	log "github.com/sirupsen/logrus"
 )
 
-func NewGoKitAuth(
-	cfg		*config.AuthConfig,
-) endpoint.Middleware {
-	rolesSet := map[string]struct{}{}
+type Auth struct {
+	User		string
+	Admin		string
 
-	for _, role := range strings.Split(cfg.RolesConfig.Roles, " ") {
-		rolesSet[role] = struct{}{}
-	}
+	// Claim where roles
+	Claim		string
 
-	return newGoKitAuth(
-		cfg,
-		NewRoleGetter(
-			"itlab",
-			rolesSet,
-		),
-	)
+	jwks 		*keyfunc.JWKs
+
+	auth		endpoint.Middleware
+	admin		endpoint.Middleware
 }
 
-func newGoKitAuth(
-	cfg 	*config.AuthConfig,
-	f		getRoleFromClaim,
-) endpoint.Middleware {
-	return func(next endpoint.Endpoint) endpoint.Endpoint {
+func NewAuth(
+	cfg		*config.AuthConfig,
+) *Auth {
+	a := &Auth{
+		User: 	cfg.UserRole,
+		Admin:	cfg.AdminRole,
+		Claim: cfg.Audience,
+	}
+
+	refreshTime := 24*time.Hour
+
+	jwks, err := keyfunc.Get(
+		cfg.KeyURL, 
+		keyfunc.Options{
+			RefreshInterval: &refreshTime,
+			RefreshErrorHandler: func(err error) {
+				log.WithFields(
+					log.Fields{
+						"func": "refreshTokernErrorHandle",
+						"err": err,
+					},
+				).Error()
+			},
+		},
+	)
+	if err != nil {
+		log.WithFields(
+			log.Fields{
+				"func": "authMiddleware",
+				"error": err,
+			},
+		).Panic("Failed to create jwks")
+	}
+	a.jwks = jwks
+
+	a.BuildAuthMiddleware()
+	a.BuildAdminMiddleware()
+
+	return a
+}
+
+func (a *Auth) AuthMiddleware() endpoint.Middleware {
+	return a.auth
+}
+
+func (a *Auth) IsAdmin() endpoint.Middleware {
+	return a.admin
+}
+
+
+func (a *Auth) RoleGetter(claims map[string]interface{}) (string, error) {
+	var roles []string
+	{
+		switch claim := claims[a.Claim].(type) {
+		case []interface{}:
+			for _, role := range claim {
+				roles = append(roles, fmt.Sprint(role))
+			}
+		case interface{}:
+			roles = append(roles, fmt.Sprint(claim))
+		}
+	}
+	if len(roles) == 0 {
+		return "", fmt.Errorf("Don't find role")
+	}
+
+	if len(roles) == 1 {
+		role := roles[0]
+		if a.isAdmin(role) {
+			return a.Admin, nil
+		} else if a.isUser(role) {
+			return a.User, nil
+		} else {
+			return "", fmt.Errorf("Don't find role")
+		}
+	} else {
+		sortedRoles := sort.StringSlice(roles)
+		sortedRoles.Sort()
+		if role, find := utils.FindString(
+			sortedRoles,
+			a.Admin,
+		); find {
+			return role, nil
+		}
+
+		if role, find := utils.FindString(
+			sortedRoles,
+			a.User,
+		); find {
+			return role, nil
+		}
+	}
+
+	return "", fmt.Errorf("don't find role")
+}
+
+func (a *Auth) isAdmin(role string) bool {
+	return role == a.Admin
+}
+
+func (a *Auth) isUser(role string) bool {
+	return role == a.User
+}
+
+func (a *Auth) BuildAuthMiddleware() {
+	a.auth = func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(
 			ctx context.Context, 
 			request interface{},
 		) (response interface{}, err error) {
-			log.Debug("auth middleware")
-			client := auth0.NewJWKClient(auth0.JWKClientOptions{URI: cfg.KeyURL}, nil)
-			configuration := auth0.NewConfiguration(client, []string{cfg.Audience}, cfg.Issuer, jose.RS256)
-			validator := auth0.NewValidator(
-				configuration, 
-				nil,
-			)
-
-			_t, _ := ctxtoken.GetTokenFromContext(ctx)
-			r := &http.Request{
-				Header: http.Header{
-					"Authorization": []string{_t},
-				},
+			_t, err := ctxtoken.GetTokenFromContext(ctx)
+			if err == ctxtoken.ErrTokenNotFound {
+				return nil, statuscode.WrapStatusError(
+					fmt.Errorf("Token not found"),
+					http.StatusUnauthorized,
+				)
 			}
 
-			token, err := validator.ValidateRequest(
-				r,
-			)
-			if err != nil {
-				log.WithFields(log.Fields{
-					"requiredAlgorithm" : "RS256",
-					"error" : err,
-				}).Debug("Token is not valid!")
+			jwtToken := strings.ReplaceAll(_t, "Bearer ","")
+			var claims jwt.MapClaims
 
+			token, err := jwt.ParseWithClaims(jwtToken, &claims, a.jwks.Keyfunc)
+			if validErr, ok := err.(*jwt.ValidationError); ok {
+				switch validErr.Errors {
+				case jwt.ValidationErrorExpired:
+					return nil, statuscode.WrapStatusError(
+						fmt.Errorf("Token expired"),
+						http.StatusUnauthorized,
+					)
+				}
+			} else if err != nil {
+				log.Error("Err:", err)
+				return nil, statuscode.WrapStatusError(
+					fmt.Errorf("Failed to parse token"),
+					http.StatusUnauthorized,
+				)
+			}
+
+			if !token.Valid {
 				return nil, statuscode.WrapStatusError(
 					fmt.Errorf("Token is not valid"),
 					http.StatusUnauthorized,
 				)
 			}
-			claims := map[string]interface{}{}
-			if err = validator.Claims(r, token, &claims); err != nil {
-				log.WithFields(log.Fields{
-					"requiredClaims" : "iss, aud, sub, role",
-					"error" : err,
-				}).Debug("Invalid claims!")
-	
-				
-				return nil, statuscode.WrapStatusError(
-					fmt.Errorf("Invalid claims"),
-					http.StatusUnauthorized,
-				)
-			}
-
-			role, err := f(claims)
+			
+			role, err := a.RoleGetter(claims)
 			if err != nil {
 				log.WithFields(log.Fields{
 					"package" : "middleware/auth",
 					"func": "authMiddleware",
 					"error" : err,
-				}).Debug("Failed to get role")
+				}).Error("Failed to get role")
 
 				return nil, statuscode.WrapStatusError(
 					fmt.Errorf("Faield to get role"),
@@ -108,13 +201,20 @@ func newGoKitAuth(
 				role,
 			)
 
+			sub := fmt.Sprint(claims["sub"])
+
+			ctx = subcontext.New(
+				ctx,
+				sub,
+			)
+
 			return next(ctx, request)
 		}
 	}
 }
 
-func EndpointAdminMiddleware() endpoint.Middleware {
-	return func(next endpoint.Endpoint) endpoint.Endpoint {
+func (a *Auth) BuildAdminMiddleware() {
+	a.admin = func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(
 			ctx context.Context, 
 			request interface{},
@@ -130,56 +230,13 @@ func EndpointAdminMiddleware() endpoint.Middleware {
 				).Panic()
 			}
 
-			re := regexp.MustCompile(`\w+.admin`)
-
-			if !re.MatchString(role) {				
+			if role != a.Admin {
 				return nil, statuscode.WrapStatusError(
 					fmt.Errorf("You are not admin"),
 					http.StatusForbidden,
 				)
 			}
-
 			return next(ctx, request)
 		}
 	}
-}
-
-type getRoleFromClaim func(map[string]interface{}) (string, error)
-
-func NewRoleGetter(
-	claimName string,
-	rolesSet map[string]struct{},
-) getRoleFromClaim {
-	return func(claims map[string]interface{}) (string, error) {
-		claim, find := claims[claimName]
-
-		if !find {
-			return "", fmt.Errorf("Failed to get itlab claim")
-		}
-
-		_roles, ok := claim.([]interface{})
-		if !ok {
-			return "", fmt.Errorf("Failed to cast types")
-		}
-
-		roles := sliceOfInterfaceToSliceOfString(_roles)
-
-		for _, role := range roles {
-			if _, find := rolesSet[role]; find {
-				return role, nil
-			}
-		}
-		
-		return "", fmt.Errorf("Failed to get rolse")
-	}
-}
-
-func sliceOfInterfaceToSliceOfString(slice []interface{}) []string {
-	var strs []string
-
-	for _, elem := range slice {
-		strs = append(strs, fmt.Sprint(elem))
-	}
-
-	return strs
 }
