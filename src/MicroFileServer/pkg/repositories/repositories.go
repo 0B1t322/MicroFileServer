@@ -8,6 +8,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
 
+	"github.com/MicroFileServer/pkg/repositories/files"
 	mgm "github.com/kamva/mgm/v3"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,7 +17,7 @@ import (
 
 
 type Repositories struct {
-
+	File	files.FileRepositorier
 }
 
 type Config struct {
@@ -62,7 +63,7 @@ func New(cfg *Config) (*Repositories, error) {
 
 	
 	return &Repositories{
-		
+		File: files.New(),
 	}, 
 	nil
 }
