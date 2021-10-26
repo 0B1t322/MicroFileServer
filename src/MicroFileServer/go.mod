@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/MicahParks/keyfunc v0.9.0
+	github.com/gabriel-vasile/mimetype v1.4.0 // indirect
 	github.com/go-kit/kit v0.11.0
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/golang-jwt/jwt/v4 v4.1.0
