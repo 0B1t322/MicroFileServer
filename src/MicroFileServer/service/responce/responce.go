@@ -29,8 +29,21 @@ type BodyEncoder interface {
 	Encode(w http.ResponseWriter) error
 }
 
+type BodyEncoderCTX interface {
+	EncodeCTX(
+		ctx context.Context, 
+		w http.ResponseWriter,
+	) error
+}
+
 type Header interface {
 	Headers(ctx context.Context, w http.ResponseWriter)
+}
+
+type HTTPResponceCTX interface {
+	Statuser
+	BodyEncoderCTX
+	Header
 }
 
 type HTTPResponce interface {
