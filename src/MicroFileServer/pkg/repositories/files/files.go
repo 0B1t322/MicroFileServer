@@ -16,7 +16,11 @@ type FilesRepository struct {
 
 func New() *FilesRepository {
 	f := &FilesRepository{}
-
+	f.BaseRepositoryMongoDB = baserepo.NewMongoDB(
+		&file.FileMongoDB{},
+		f,
+	)
+	
 	return f
 }
 

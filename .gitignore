@@ -3,5 +3,7 @@ auth_config.json
 .idea
 mongodb_data
 .env
-
+**/main
 workspace.code-workspace
+**/.DS_Store
+src/MicroFileServer/.DS_Store

@@ -1,0 +1,266 @@
+basePath: /api/mfs
+definitions:
+  err.Message:
+    properties:
+      message:
+        type: string
+    type: object
+  file.File:
+    properties:
+      chunkSize:
+        type: integer
+      filename:
+        type: string
+      id:
+        type: string
+      length:
+        type: integer
+      metadata:
+        $ref: '#/definitions/file.Metadata'
+      uploadDate:
+        type: string
+    type: object
+  file.Metadata:
+    properties:
+      fileDescription:
+        type: string
+      fileSender:
+        type: string
+    type: object
+  files.GetFileResp:
+    properties:
+      chunkSize:
+        type: integer
+      filename:
+        type: string
+      id:
+        type: string
+      length:
+        type: integer
+      metadata:
+        $ref: '#/definitions/file.Metadata'
+      uploadDate:
+        type: string
+    type: object
+  files.GetFilesResp:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/file.File'
+        type: array
+    type: object
+  files.UploadFileResp:
+    properties:
+      chunkSize:
+        type: integer
+      filename:
+        type: string
+      id:
+        type: string
+      length:
+        type: integer
+      metadata:
+        $ref: '#/definitions/file.Metadata'
+      uploadDate:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: This is a server for save and get files
+  title: MicroFileService API
+  version: "1.0"
+paths:
+  /files:
+    get:
+      description: |-
+        return files info
+        if you are not admin you can get info only about you files
+      parameters:
+      - description: id of the user which files you want get
+        in: query
+        name: user
+        type: string
+      - description: 'sort by ascendig; can be name or date '
+        in: query
+        name: sorted_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/files.GetFilesResp'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/err.Message'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/err.Message'
+      security:
+      - ApiKeyAuth: []
+      summary: get files
+      tags:
+      - files
+  /files/{id}:
+    delete:
+      description: |-
+        delete file from service
+        if you not admin you can only delete files that you upload
+      parameters:
+      - description: id of the file
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ""
+        "400":
+          description: if file id is not valid
+          schema:
+            $ref: '#/definitions/err.Message'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/err.Message'
+        "403":
+          description: if it's not your file
+          schema:
+            $ref: '#/definitions/err.Message'
+        "404":
+          description: if file not found after upload
+          schema:
+            $ref: '#/definitions/err.Message'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/err.Message'
+      security:
+      - ApiKeyAuth: []
+      summary: delete file
+      tags:
+      - files
+    get:
+      description: get info about file
+      parameters:
+      - description: id of the file
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/files.GetFileResp'
+        "400":
+          description: if file id is not valid
+          schema:
+            $ref: '#/definitions/err.Message'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/err.Message'
+        "404":
+          description: if file not found after upload
+          schema:
+            $ref: '#/definitions/err.Message'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/err.Message'
+      security:
+      - ApiKeyAuth: []
+      summary: get file info
+      tags:
+      - files
+  /files/download/{id}:
+    get:
+      description: download file from service
+      parameters:
+      - description: id of the file
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - '*/*'
+      - image/jpeg
+      - image/png
+      - image/gif
+      - video/*
+      - audio/*
+      - image/*
+      - application/pdf
+      - application/msword
+      - application/vnd.ms-excel
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: if file id is not valid
+          schema:
+            $ref: '#/definitions/err.Message'
+        "404":
+          description: if file not found after upload
+          schema:
+            $ref: '#/definitions/err.Message'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/err.Message'
+      summary: download file
+      tags:
+      - files
+  /files/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: upload file to service
+      parameters:
+      - description: file that need to upload
+        in: formData
+        name: uploadingForm
+        required: true
+        type: file
+      - description: file description
+        in: formData
+        name: fileDescription
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/files.UploadFileResp'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/err.Message'
+        "404":
+          description: if file not found after upload
+          schema:
+            $ref: '#/definitions/err.Message'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/err.Message'
+      security:
+      - ApiKeyAuth: []
+      summary: upload file
+      tags:
+      - files
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -44,13 +44,13 @@ func New(cfg *config.Config) *App {
 		app.Repository = _rep
 	}
 
-	app.Router = mux.NewRouter().PathPrefix("/api/projects").Subrouter()
+	app.Router = mux.NewRouter().PathPrefix("/api/mfs").Subrouter()
 	if !cfg.App.TestMode {
 		log.SetLevel(log.InfoLevel)
-		app.auth = auth.NewAuth(cfg.Auth)
 	} else {
 		log.SetLevel(log.DebugLevel)
 	}
+	app.auth = auth.NewAuth(cfg.Auth)
 
 	app.Logger = klogrus.NewLogger(log.StandardLogger())
 
@@ -71,8 +71,8 @@ func (a *App) Start() {
 	s := &http.Server{
 		Addr: fmt.Sprintf(":%s",a.Port),
 		Handler: a.Router,
-		ReadTimeout: 10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout: 60 * time.Second,
+		WriteTimeout: 60 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 		IdleTimeout: 2*time.Second,
 	}

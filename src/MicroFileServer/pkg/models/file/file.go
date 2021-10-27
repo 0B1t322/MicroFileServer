@@ -31,5 +31,5 @@ type FileMongoDB struct {
 }
 
 func (f *FileMongoDB) CollectionName() string {
-	return "fs.file"
+	return "fs.files"
 }

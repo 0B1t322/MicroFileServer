@@ -6,7 +6,19 @@ import (
 	"github.com/MicroFileServer/pkg/models/file"
 )
 
+type GetFilesBuilder interface {
+	SetFileSender(userid string) GetFilesBuilder
+	SetDateSort() GetFilesBuilder
+	SetNameSort() GetFilesBuilder
+}
+
+type Builders interface {
+	GetFilesBuilder() GetFilesBuilder
+}
+
 type FileRepository interface{
+	Builders
+
 	UploadFile(
 		ctx			context.Context,
 		fileName	string,
@@ -23,4 +35,14 @@ type FileRepository interface{
 		ctx		context.Context,
 		FileID	string,
 	) (*file.File, error)
+
+	DeleteFile(
+		ctx		context.Context,
+		FileId	string,
+	) error
+
+	GetFiles(
+		ctx		context.Context,
+		builder	GetFilesBuilder,
+	) ([]*file.File, error)
 }

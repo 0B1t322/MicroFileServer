@@ -6,8 +6,8 @@ import (
 
 	"github.com/MicroFileServer/pkg/models/file"
 	op_err "github.com/MicroFileServer/pkg/repositories/errors"
-	"github.com/MicroFileServer/pkg/repositories/files"
 	"go.mongodb.org/mongo-driver/bson"
+	"github.com/MicroFileServer/pkg/repositories/files"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -40,18 +40,19 @@ func (f *FilesMongoDBImp) UploadFile(
 	if err != nil {
 		return nil, err
 	}
-	defer stream.Close()
 
 	if _, err := stream.Write(rawFile); err != nil {
+		stream.Close()
 		return nil, err
 	}
-
+	fileId := stream.FileID
+	stream.Close()
 	var file file.File
 	{
 		if err := f.Repo.GetOne(
 			ctx,
 			bson.M{
-				"_id": stream.FileID,
+				"_id": fileId,
 			},
 			func(sr *mongo.SingleResult) error {
 				return sr.Decode(&file)
@@ -129,4 +130,90 @@ func (f *FilesMongoDBImp) getFile(
 	}
 
 	return &file, nil
+}
+
+func (f *FilesMongoDBImp) DeleteFile(
+	ctx		context.Context,
+	FileId	string,
+) error {
+	fileId, err := primitive.ObjectIDFromHex(FileId)
+	if err != nil {
+		return op_err.ErrNotValidID
+	}
+
+	bucket, err := f.Repo.NewBucket()
+	if err != nil {
+		return err
+	}
+
+	if err := bucket.Delete(fileId); err == mongo.ErrNoDocuments {
+		return op_err.ErrDocumentNotFound
+	} else if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type getFilesQueryBuilder struct {
+	filter	bson.M
+	sort	bson.D
+}
+
+func (g *getFilesQueryBuilder) SetFileSender(userid string) GetFilesBuilder {
+	g.filter["fileSender"] = userid
+	return g
+}
+
+func (g *getFilesQueryBuilder) SetDateSort() GetFilesBuilder {
+	g.sort = append(g.sort, bson.E{Key: "uploadDate", Value: 1})
+	return g
+}
+
+func (g *getFilesQueryBuilder) SetNameSort() GetFilesBuilder {
+	g.sort = append(g.sort, bson.E{Key: "metadata.fileSender", Value: 1})
+	return g
+}
+
+func (f *FilesMongoDBImp) GetFilesBuilder() GetFilesBuilder {
+	return &getFilesQueryBuilder{
+		filter: bson.M{},
+		sort: bson.D{},
+	}
+}
+
+func (f *FilesMongoDBImp) GetFiles(
+	ctx		context.Context,
+	Builder	GetFilesBuilder,
+) ([]*file.File, error) {
+	builder := Builder.(*getFilesQueryBuilder)
+
+	opt := options.Find()
+	{
+		if len(builder.sort) != 0 {
+			opt = opt.SetSort(builder.sort)
+		}
+	}
+
+	files := []*file.File{}
+	{
+		if err := f.Repo.GetAllFiltered(
+			ctx,
+			builder.filter,
+			func(c *mongo.Cursor) error {
+				if c.RemainingBatchLength() == 0 {
+					return op_err.ErrDocumentNotFound
+				}
+
+				return c.All(ctx, &files)
+			},
+			opt,
+		); err == op_err.ErrDocumentNotFound {
+			// Pass
+		} else if err != nil {
+			return nil, err
+		}
+	}
+
+	return files, nil
 }

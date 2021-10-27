@@ -6,6 +6,7 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -34,11 +35,15 @@ type AppConfig struct {
 	AppPort  		string 	`envconfig:"MFS_APP_PORT" json:"appPort"`
 	TestMode		bool	`envconfig:"MFS_APP_TEST_MODE" json:"testMode"`
 	MaxFileSize		int64	`envconfig:"MFS_APP_MAX_FILE_SIZE" json:"maxFileSize"`
-	PathPrefix		string	`envconfig:"MFS_APP_PATH_PREFIX" json:"pathPrefix"`
 }
 
 func GetConfig() *Config {
 	var config Config
+
+	if err := godotenv.Load("./.env"); err != nil {
+		log.Warn("Don't find .env file")
+	}
+
 	data, err := ioutil.ReadFile("config.json")
 	if err != nil {
 		log.WithFields(log.Fields{

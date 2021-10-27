@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/MicroFileServer/pkg/contextvalue/reqcontext"
-	"github.com/MicroFileServer/pkg/contextvalue/subcontext"
 	"github.com/MicroFileServer/pkg/models/file"
 	"github.com/MicroFileServer/pkg/statuscode"
+	"github.com/MicroFileServer/pkg/urlvalue/encode"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -113,18 +113,9 @@ func HTTPDecodeUploadFileReq(
 	}
 
 	desc := r.FormValue("fileDescription")
-	fileSender, err := subcontext.GetSubFromContext(ctx)
-	if err != nil {
-		log.Errorf("Don't find sub id")
-		return nil, statuscode.WrapStatusError(
-			fmt.Errorf("Failed to find sub id"),
-			http.StatusInternalServerError,
-		)
-	}
 
 	req := &UploadFileReq{
 		RawFile: rawFile,
-		FileSender: fileSender,
 		FileDesc: desc,
 		FileName: handler.Filename,
 	}
@@ -133,7 +124,7 @@ func HTTPDecodeUploadFileReq(
 }
 
 type UploadFileResp struct {
-	File	*file.File
+	*file.File	`json:",inline"`
 }
 
 func (resp *UploadFileResp) StatusCode() int {
@@ -141,9 +132,124 @@ func (resp *UploadFileResp) StatusCode() int {
 }
 
 func (resp *UploadFileResp) Encode(w http.ResponseWriter) error {
-	return json.NewEncoder(w).Encode(resp.File)
+	return json.NewEncoder(w).Encode(resp)
 }
 
 func (resp *UploadFileResp) Headers(ctx context.Context, w http.ResponseWriter) {
+	w.Header().Add("Content-Type", "application/json")
+}
+
+type DeleteFileReq struct {
+	FileID	string
+}
+
+func (d *DeleteFileReq) GetID() string {
+	return d.FileID
+}
+
+func HTTPDecodeDeleteFileReq(
+	ctx		context.Context,
+	r		*http.Request,
+) (interface{}, error) {
+	vars := mux.Vars(r)
+	req := &DeleteFileReq{
+		FileID: vars["id"],
+	}
+
+	return req, nil
+}
+
+type DeleteFileResp struct {
+}
+
+func (resp *DeleteFileResp) StatusCode() int {
+	return http.StatusOK
+}
+
+func (resp *DeleteFileResp) Encode(w http.ResponseWriter) error {
+	return nil
+}
+
+func (resp *DeleteFileResp) Headers(ctx context.Context, w http.ResponseWriter) {
+	return
+}
+
+type GetFileReq struct {
+	FileID	string
+}
+
+func HTTPDecodeGetFileReq(
+	ctx		context.Context,
+	r		*http.Request,
+) (interface{}, error) {
+	vars := mux.Vars(r)
+	req := &GetFileReq{
+		FileID: vars["id"],
+	}
+
+	return req, nil
+}
+
+type GetFileResp struct {
+	*file.File	`json:",inline"`
+}
+
+func (resp *GetFileResp) StatusCode() int {
+	return http.StatusOK
+}
+
+func (resp *GetFileResp) Encode(w http.ResponseWriter) error {
+	return json.NewEncoder(w).Encode(resp)
+}
+
+func (resp *GetFileResp) Headers(ctx context.Context, w http.ResponseWriter) {
+	w.Header().Add("Content-Type", "application/json")
+}
+
+type GetFilesReq struct {
+	Query	GetFilesQuery
+}
+
+func (g *GetFilesReq) SetUserID(userid string) {
+	g.Query.UserID = userid
+}
+
+type GetFilesQuery struct {
+	UserID		string	`query:"user,string"`
+	SortedBy	string	`query:"sorted_by,string"`
+}
+
+func HTTPDecodeGetFilesReq(
+	ctx		context.Context,
+	r		*http.Request,
+) (interface{}, error) {
+	req := &GetFilesReq{}
+
+	if err := encode.UrlQueryUnmarshall(
+		&req.Query,
+		r.URL.Query(),
+	); err != nil {
+		return nil, statuscode.WrapStatusError(
+			fmt.Errorf("Failed to decode request"),
+			http.StatusBadRequest,
+		)
+	}
+
+	return req, nil
+}
+
+type GetFilesResp struct {
+	Files	[]*file.File	`json:"files"`
+}
+
+func (resp *GetFilesResp) StatusCode() int {
+	return http.StatusOK
+}
+
+func (resp *GetFilesResp) Encode(w http.ResponseWriter) error {
+	return json.NewEncoder(w).Encode(resp)
+}
+
+func (resp *GetFilesResp) Headers(ctx context.Context, w http.ResponseWriter) {
 	w.Header().Add("Content-Type", "application/json")
 }
