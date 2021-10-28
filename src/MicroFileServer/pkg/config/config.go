@@ -23,12 +23,12 @@ type AuthConfig struct {
 	KeyURL   		string 	`envconfig:"MFS_AUTH_KEY_URL" json:"keyUrl"`
 	Audience 		string 	`envconfig:"MFS_AUTH_AUDIENCE" json:"audience"`
 	Issuer   		string 	`envconfig:"MFS_AUTH_ISSUER" json:"issuer"`
-	*RolesConfig
+	*RolesConfig			`json:"roles"`
 }
 
 type RolesConfig struct {
-	UserRole		string	`envconfig:"MFS_AUTH_ROLE_USER" json:"user_role"`
-	AdminRole		string	`envconfig:"MFS_AUTH_ROLE_ADMIN" json:"admin_role"`
+	UserRole		string	`envconfig:"MFS_AUTH_ROLE_USER" json:"user"`
+	AdminRole		string	`envconfig:"MFS_AUTH_ROLE_ADMIN" json:"admin"`
 }
 
 type AppConfig struct {
