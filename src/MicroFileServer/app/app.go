@@ -27,9 +27,7 @@ type App struct {
 
 func New(cfg *config.Config) *App {
 	app := &App{}
-
 	app.Port = cfg.App.AppPort
-
 	if _rep, err := repositories.New(&repositories.Config{
 		DBURI: cfg.DB.URI,
 	}); err != nil {
