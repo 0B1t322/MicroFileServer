@@ -1,18 +1,19 @@
-children: []
+children:
+  - Assertions
 type: RequestStep
 assignVariables: []
 requestData:
   request:
     method: GET
-    url: '${$env.baseURL}/files?sorted_by=name'
+    url: '${$env.baseURL}/files?user=user-1'
   headers:
     - isChecked: true
       name: Authorization
-      value: 'Bearer ${$env.user_2_token}'
+      value: 'Bearer ${$env.user_1_token}'
   disabledInheritedHeaders: []
   params:
-    - name: sorted_by
-      value: name
+    - name: user
+      value: user-1
       isChecked: true
   body:
     type: Json
@@ -26,5 +27,5 @@ requestData:
   followRedirect: Inherit
 authData:
   type: inherit
-name: GetFilesList
+name: GetFilesListForUser for user-1 by user-1
 variablesArray: []

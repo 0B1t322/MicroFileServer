@@ -7,13 +7,23 @@ environments:
       baseURL: 'http://localhost:8080'
       testJWT: >-
         eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMyJ9.eyJhdWQiOiJpdGxhYiIsImlzcyI6Imh0dHBzOi8vZGV2LmlkZW50aXR5LnJ0dWl0bGFiLnJ1IiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE1MDU0Njc3NTY4NjksInN1YiI6IjMyMS1sb2wtMzIxIiwicm9sZSI6InVzZXIiLCJzY29wZSI6WyJyb2xlcyIsIm9wZW5pZCIsInByb2ZpbGUiLCJpdGxhYi5ldmVudHMiLCJpdGxhYi5yZXBvcnRzIl19.aRyxv96apYbGnyMtbACKdizTFPBmyCG2PpwActLyKJk
+      user_1_token: >-
+        eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMyJ9.eyJhdWQiOiJpdGxhYiIsImlzcyI6Imh0dHBzOi8vZGV2LmlkZW50aXR5LnJ0dWl0bGFiLnJ1IiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE1MDU0Njc3NTY4NjksInN1YiI6InVzZXItMSIsInJvbGUiOiJ1c2VyIiwic2NvcGUiOlsicm9sZXMiLCJvcGVuaWQiLCJwcm9maWxlIiwiaXRsYWIuZXZlbnRzIiwiaXRsYWIucmVwb3J0cyJdfQ.LEtENnk5RzQ5cHbUHeiY9v07aX030H8IR70ZNNQpTWw
+      user_2_token: >-
+        eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMyJ9.eyJhdWQiOiJpdGxhYiIsImlzcyI6Imh0dHBzOi8vZGV2LmlkZW50aXR5LnJ0dWl0bGFiLnJ1IiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE1MDU0Njc3NTY4NjksInN1YiI6InVzZXItMiIsInJvbGUiOiJ1c2VyIiwic2NvcGUiOlsicm9sZXMiLCJvcGVuaWQiLCJwcm9maWxlIiwiaXRsYWIuZXZlbnRzIiwiaXRsYWIucmVwb3J0cyJdfQ.yecq_hPvy4vCps-nxfel_08lNcus3kzMolwgxth-vrU
+      admin_token: >-
+        eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMyJ9.eyJhdWQiOiJpdGxhYiIsImlzcyI6Imh0dHBzOi8vZGV2LmlkZW50aXR5LnJ0dWl0bGFiLnJ1IiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE1MDU0Njc3NTY4NjksInN1YiI6InVzZXItMyIsInJvbGUiOiJtZnMuYWRtaW4iLCJpdGxhYiI6WyJtZnMuYWRtaW4iXSwic2NvcGUiOlsicm9sZXMiLCJvcGVuaWQiLCJwcm9maWxlIiwiaXRsYWIuZXZlbnRzIiwiaXRsYWIucmVwb3J0cyJdfQ.DtSd1_vjUOc1jkAXmQzLXi-lXdKalG6xebSWH1Us-BU
 children:
-  - UploadFile
-  - GetFilesListForUser
+  - UploadFile user_1
+  - UploadFile user_2
+  - GetFilesListForUser for user-1 by user-1
+  - GetFilesListForUser for user-2 by user-1
   - GetFilesList
   - DownloadFile
-  - DeleteFile
-variables: {}
+  - DeleteFile by user_2
+  - DeleteFile by user_1
+  - DeleteFile by admin
+  - GetFilesListForUser for user-2 by admin
 authData:
   type: inherit
 settings:
@@ -21,9 +31,10 @@ settings:
     enable: false
 requestData:
   headers:
-    - isChecked: true
+    - isChecked: false
       name: Authorization
-      value: 'Bearer ${$env.testJWT}'
+      value: 'Bearer ${$env.user_1_token}'
   disabledInheritedHeaders: []
   strictSSL: 'No'
 cookies: []
+variablesArray: []

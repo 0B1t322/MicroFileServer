@@ -1,0 +1,84 @@
+enabled: true
+children: []
+variablesArray: []
+type: Assertion
+assertions:
+  - disabled: false
+    negative: false
+    type: compare
+    actualValue: '${$response.code}'
+    operator: equal
+    expectedValueType: string
+    name: status code
+    expectedValue: '200'
+  - disabled: false
+    negative: false
+    type: script
+    script: |
+      console.log(tm.currentNode.parent.vars.checkCount)
+
+      let body = tm.currentNode.parent.response.body
+
+      assert(
+        typeof body === "object", 
+        'Body should be an object'
+      )
+
+      assert(
+        'id' in body,
+        "should have id"
+      )
+
+      assert(
+        'filename' in body,
+        "should have own property"
+      )
+
+      assert(
+          'chunkSize' in body,
+          'chukSize should be in body'
+      )
+
+      assert(
+        'length' in body,
+        'length should be in body'
+      )
+
+      assert(
+        'uploadDate' in body,
+        "uploadDate should be in body",
+      )
+
+      assert(
+        'metadata' in body,
+        'metadata should be in body',
+      )
+
+      let metadata = body.metadata
+      assert(
+        'fileSender' in metadata,
+        'fileSender should be in metadata'
+      )
+
+      assert(
+        'fileDescription' in metadata,
+        'fileDescription should be in metadata'
+      )
+    name: Body check
+  - disabled: false
+    negative: false
+    type: compare
+    actualValue: '${$response.body.metadata.fileSender}'
+    operator: equal
+    expectedValueType: string
+    name: sender
+    expectedValue: user-2
+  - disabled: false
+    negative: false
+    type: compare
+    actualValue: '${$response.body.metadata.fileDescription}'
+    operator: equal
+    expectedValueType: string
+    name: file desc
+    expectedValue: ''
+name: Assertions

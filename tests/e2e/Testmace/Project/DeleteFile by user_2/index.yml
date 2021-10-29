@@ -1,13 +1,15 @@
 children:
-  - Assertions
-variables: {}
+  - Asserts
 type: RequestStep
 assignVariables: []
 requestData:
   request:
-    method: POST
-    url: '${$env.baseURL}/upload'
-  headers: []
+    method: DELETE
+    url: '${$env.baseURL}/files/${$dynamicVar.file_user_1}'
+  headers:
+    - isChecked: true
+      name: Authorization
+      value: 'Bearer ${$env.user_2_token}'
   disabledInheritedHeaders: []
   params: []
   body:
@@ -21,4 +23,5 @@ requestData:
   strictSSL: Inherit
 authData:
   type: inherit
-name: UploadFile
+name: DeleteFile by user_2
+variablesArray: []
