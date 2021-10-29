@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option go_package = "github.com/MicroFileServer/proto";
+
+service MicroFileServer {
+    /* 
+    delete file from service
+    if you not admin you can delete only your own files
+    requires token in metadata in ":authority"
+    */
+    rpc DeleteFile(DeleteFileReq) returns (DeleteFileResp);
+}
+
+message DeleteFileReq {
+    // id of the file
+    string fileId = 1;
+}
+
+message DeleteFileResp {
+}
