@@ -37,8 +37,13 @@ type Auth struct {
 	admin		endpoint.Middleware
 }
 
+type Config struct {
+	*config.AuthConfig
+	Testmode	bool
+}
+
 func NewAuth(
-	cfg		*config.AuthConfig,
+	cfg		*Config,
 ) *Auth {
 	a := &Auth{
 		User: 	cfg.UserRole,
@@ -72,7 +77,12 @@ func NewAuth(
 	}
 	a.jwks = jwks
 
-	a.BuildAuthMiddleware()
+	if cfg.Testmode {
+		a.BuildTestAuthMiddleware()
+	} else {
+		a.BuildAuthMiddleware()
+	}
+
 	a.BuildAdminMiddleware()
 
 	return a
@@ -86,6 +96,89 @@ func (a *Auth) IsAdmin() endpoint.Middleware {
 	return a.admin
 }
 
+func (a *Auth) BuildTestAuthMiddleware() {
+	a.auth = func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(
+			ctx context.Context, 
+			request interface{},
+		) (response interface{}, err error) {
+			log.Debug("Test auth")
+			_t, err := ctxtoken.GetTokenFromContext(ctx)
+
+			if err == ctxtoken.ErrTokenNotFound {
+				return nil, statuscode.WrapStatusError(
+					fmt.Errorf("Token not found"),
+					http.StatusUnauthorized,
+				)
+			}
+
+			jwtToken := strings.ReplaceAll(_t, "Bearer ","")
+			var claims jwt.MapClaims
+
+			_, err = jwt.ParseWithClaims(
+				jwtToken,
+				&claims,
+				func(t *jwt.Token) (interface{}, error) {
+					log.Debug("key func")
+					if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+						return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+					}
+					log.Debug("okay")
+					return []byte("test"), nil
+				},
+			)
+			if validErr, ok := err.(*jwt.ValidationError); ok {
+				switch validErr.Errors {
+				case jwt.ValidationErrorExpired:
+					// pass
+				}
+			} else if err != nil {
+				log.Error("Err:", err)
+				return nil, statuscode.WrapStatusError(
+					fmt.Errorf("Failed to parse token"),
+					http.StatusUnauthorized,
+				)
+			}
+
+			// if !token.Valid {
+			// 	return nil, statuscode.WrapStatusError(
+			// 		fmt.Errorf("Token is not valid"),
+			// 		http.StatusUnauthorized,
+			// 	)
+			// }
+			log.Debug(claims)
+			role, err := a.RoleGetter(claims)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"package" : "middleware/auth",
+					"func": "authMiddleware",
+					"error" : err,
+				}).Error("Failed to get role")
+
+				return nil, statuscode.WrapStatusError(
+					fmt.Errorf("Faield to get role"),
+					http.StatusUnauthorized,
+				)
+			}
+
+			ctx = rolecontext.New(
+				ctx,
+				role,
+			)
+			log.Debug("role is:", role)
+
+			sub := fmt.Sprint(claims["sub"])
+
+			log.Debug("sub is:", sub)
+			ctx = subcontext.New(
+				ctx,
+				sub,
+			)
+
+			return next(ctx, request)
+		}
+	}
+}
 
 func (a *Auth) RoleGetter(claims map[string]interface{}) (string, error) {
 	var roles []string

@@ -58,20 +58,13 @@ func (a *Api) CreateServices() {
 
 func (a *Api) Build(r *mux.Router) {
 	router := r.PathPrefix("/").Subrouter()
-	var endpounts ApiEndpoints
-	{
-		if a.TestMode {
-			endpounts = a._buildEndpoints()
-		} else {
-			endpounts = a.buildEndpoints()
-		}
-	}
+	endpoints := a.buildEndpoints()
 
 	files.NewHTTPServer(
 		&files.Config{
 			MaxFileSizeMB: a.MaxFileSizeMB,
 		},
-		endpounts.Files,
+		endpoints.Files,
 		router,
 	)
 }

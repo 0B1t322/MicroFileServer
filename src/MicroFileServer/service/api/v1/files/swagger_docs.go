@@ -2,10 +2,12 @@ package files
 
 import (
 	e "github.com/MicroFileServer/pkg/err"
+	file "github.com/MicroFileServer/pkg/models/file"
 )
 
 func init() {
 	_ = e.Message{}
+	_ = file.File{}
 }
 
 // UploadFile
@@ -28,7 +30,7 @@ func init() {
 // 
 // @Produce json
 // 
-// @Success 201 {object} files.UploadFileResp
+// @Success 200 {object} files.UploadFileResp
 // 
 // @Failure 401 {object} e.Message
 // 
@@ -136,7 +138,7 @@ func (Server) HTTPGetFile() {}
 // 
 // @Produce json
 // 
-// @Success 200 {object} files.GetFilesResp
+// @Success 200 {array} file.File
 // 
 // @Failure 401 {object} e.Message
 // 

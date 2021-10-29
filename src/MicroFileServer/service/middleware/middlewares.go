@@ -90,16 +90,19 @@ func MergeMiddlewaresIntoOr(
 
 // req should implement method 
 // 	SetUserID(userid string)
-func SetUserID() endpoint.Middleware {
+// 	GetUserID() string
+func ValidateAndSetUserID() endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
 		return func(
 			ctx		context.Context,
 			request		interface{},
 		) (response interface{}, err error) {
-			type SetUserIDReq interface{
+			type UserIDReq interface{
 				SetUserID(userid string)
+				GetUserID() string
 			}
-			log.Info("SetUserID middleware")
+
+			log.Info("ValidateAndSetUserID middleware")
 			userid, err := subcontext.GetSubFromContext(ctx)
 			if err != nil {
 				return nil, statuscode.WrapStatusError(
@@ -109,8 +112,17 @@ func SetUserID() endpoint.Middleware {
 			}
 
 			switch req := request.(type){
-			case SetUserIDReq:
-				req.SetUserID(userid)
+			case UserIDReq:
+				reqUserID := req.GetUserID()
+
+				if reqUserID == "" {
+					req.SetUserID(userid)
+				} else if reqUserID != userid {
+					return nil, statuscode.WrapStatusError(
+						fmt.Errorf("You are not have permission to do that"),
+						http.StatusForbidden,
+					)
+				}
 			}
 			return next(ctx, request)
 		}

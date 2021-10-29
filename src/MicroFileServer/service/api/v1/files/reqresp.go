@@ -128,7 +128,7 @@ type UploadFileResp struct {
 }
 
 func (resp *UploadFileResp) StatusCode() int {
-	return http.StatusCreated
+	return http.StatusOK
 }
 
 func (resp *UploadFileResp) Encode(w http.ResponseWriter) error {
@@ -214,6 +214,10 @@ func (g *GetFilesReq) SetUserID(userid string) {
 	g.Query.UserID = userid
 }
 
+func (g *GetFilesReq) GetUserID() string {
+	return g.Query.UserID
+}
+
 type GetFilesQuery struct {
 	UserID		string	`query:"user,string"`
 	SortedBy	string	`query:"sorted_by,string"`
@@ -247,7 +251,7 @@ func (resp *GetFilesResp) StatusCode() int {
 }
 
 func (resp *GetFilesResp) Encode(w http.ResponseWriter) error {
-	return json.NewEncoder(w).Encode(resp)
+	return json.NewEncoder(w).Encode(resp.Files)
 }
 
 func (resp *GetFilesResp) Headers(ctx context.Context, w http.ResponseWriter) {

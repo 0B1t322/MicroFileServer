@@ -57,7 +57,10 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/files.GetFilesResp"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/file.File"
+                            }
                         }
                     },
                     "401": {
@@ -165,8 +168,8 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/files.UploadFileResp"
                         }
@@ -370,17 +373,6 @@ var doc = `{
                 },
                 "uploadDate": {
                     "type": "string"
-                }
-            }
-        },
-        "files.GetFilesResp": {
-            "type": "object",
-            "properties": {
-                "files": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/file.File"
-                    }
                 }
             }
         },

@@ -42,13 +42,6 @@ definitions:
       uploadDate:
         type: string
     type: object
-  files.GetFilesResp:
-    properties:
-      files:
-        items:
-          $ref: '#/definitions/file.File'
-        type: array
-    type: object
   files.UploadFileResp:
     properties:
       chunkSize:
@@ -90,7 +83,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/files.GetFilesResp'
+            items:
+              $ref: '#/definitions/file.File'
+            type: array
         "401":
           description: Unauthorized
           schema:
@@ -237,8 +232,8 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
             $ref: '#/definitions/files.UploadFileResp'
         "401":

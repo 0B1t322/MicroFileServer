@@ -48,7 +48,12 @@ func New(cfg *config.Config) *App {
 	} else {
 		log.SetLevel(log.DebugLevel)
 	}
-	app.auth = auth.NewAuth(cfg.Auth)
+	app.auth = auth.NewAuth(
+		&auth.Config{
+			AuthConfig: cfg.Auth,
+			Testmode: cfg.App.TestMode,
+		},
+	)
 
 	app.Logger = klogrus.NewLogger(log.StandardLogger())
 
