@@ -1,19 +1,19 @@
-children: []
+enabled: true
+children:
+  - Asserts
+variablesArray: []
 type: RequestStep
 assignVariables: []
 requestData:
   request:
-    method: GET
-    url: '${$env.baseURL}/files?sorted_by=name'
+    method: DELETE
+    url: '${$env.baseURL}/files/${$dynamicVar.file_user_1}'
   headers:
     - isChecked: true
       name: Authorization
-      value: 'Bearer ${$env.user_2_token}'
+      value: 'Bearer ${$env.user_1_token}'
   disabledInheritedHeaders: []
-  params:
-    - name: sorted_by
-      value: name
-      isChecked: true
+  params: []
   body:
     type: Json
     jsonBody: ''
@@ -23,8 +23,6 @@ requestData:
     file: ''
     formURLEncoded: []
   strictSSL: Inherit
-  followRedirect: Inherit
 authData:
   type: inherit
-name: GetFilesList
-variablesArray: []
+name: DeleteFile by user_1

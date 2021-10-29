@@ -1,12 +1,14 @@
 children: []
-variables: {}
 type: RequestStep
 assignVariables: []
 requestData:
   request:
     method: GET
-    url: '${$env.baseURL}/download/5e824b6dd3468776ad95b04d'
-  headers: []
+    url: '${$env.baseURL}/download/${$dynamicVar.file_user_1}'
+  headers:
+    - isChecked: true
+      name: Authorization
+      value: '${$env.user_1_token}'
   disabledInheritedHeaders: []
   params: []
   body:
@@ -21,3 +23,4 @@ requestData:
 authData:
   type: inherit
 name: DownloadFile
+variablesArray: []

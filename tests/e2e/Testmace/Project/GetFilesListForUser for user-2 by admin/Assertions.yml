@@ -1,0 +1,14 @@
+enabled: true
+children: []
+variablesArray: []
+type: Assertion
+assertions:
+  - disabled: false
+    negative: false
+    type: compare
+    actualValue: '${$response.code}'
+    operator: equal
+    expectedValueType: string
+    name: Status code
+    expectedValue: '200'
+name: Assertions

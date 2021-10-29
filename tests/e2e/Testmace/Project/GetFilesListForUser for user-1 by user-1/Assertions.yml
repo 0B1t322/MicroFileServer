@@ -1,0 +1,33 @@
+enabled: true
+children: []
+variablesArray: []
+type: Assertion
+assertions:
+  - disabled: false
+    negative: false
+    type: compare
+    actualValue: '${$response.code}'
+    operator: equal
+    expectedValueType: string
+    name: Status code
+    expectedValue: '200'
+  - disabled: false
+    negative: false
+    type: script
+    script: |-
+      let body = tm.currentNode.parent.response.body
+
+
+      assert(
+        Array.isArray(body),
+        'body should be an array'
+      )
+
+
+      for (let file of body) {
+        assert(
+          file.metadata.fileSender == 'user-1',
+          'file sender should be only user-1'
+          )
+      }
+name: Assertions

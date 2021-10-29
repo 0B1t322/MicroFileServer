@@ -1,0 +1,38 @@
+enabled: true
+children:
+  - Assertions
+variablesArray: []
+type: RequestStep
+assignVariables:
+  - assign:
+      type: reference
+      refNodePath: Project
+    path: 'body[''id'']'
+    variable: file_user_2
+requestData:
+  request:
+    method: POST
+    url: '${$env.baseURL}/files/upload'
+  headers:
+    - isChecked: true
+      name: Authorization
+      value: 'Bearer ${$env.user_2_token}'
+  disabledInheritedHeaders: []
+  params: []
+  body:
+    type: FormData
+    jsonBody: ''
+    xmlBody: ''
+    textBody: ''
+    formData:
+      - isChecked: true
+        value: golang arcicile.pdf
+        name: uploadingForm
+        type: File
+    file: ''
+    formURLEncoded: []
+  strictSSL: Inherit
+  followRedirect: Inherit
+authData:
+  type: inherit
+name: UploadFile user_2

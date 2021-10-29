@@ -1,12 +1,30 @@
 version: '3.7'
 services:
+  api:
+    build: './api'
+    environment:
+      - TZ=Europe/Moscow
+      - MFS_MONGO_URI=mongodb://root:root@db:27017/mfs?authSource=admin
+      - MFS_APP_TEST_MODE=${MFS_APP_TEST_MODE}
+      - MFS_APP_PORT=8080
+      - MFS_APP_MAX_FILE_SIZE=100
+      - MFS_APP_PATH_PREFIX="/api/mfs"
+      - MFS_AUTH_KEY_URL=${MFS_AUTH_KEY_URL}
+      - MFS_AUTH_AUDIENCE=${MFS_AUTH_AUDIENCE}
+      - MFS_AUTH_ISSUER=${MFS_AUTH_ISSUER}
+    ports:
+      - '8080:8080'
+    depends_on:
+      - 'db'
+    command: sh -c "sleep 10 && ./main"
   db:
     environment:
-      MONGO_INITDB_ROOT_USERNAME: "${MONGO_INITDB_ROOT_USERNAME}"
-      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_INITDB_ROOT_PASSWORD}"
-      MONGO_INITDB_DATABASE:      "${MONGO_INITDB_DATABASE}"
+      - TZ=Europe/Moscow
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root
+      - MONGO_INITDB_DATABASE=mfs
+    image: 'mongo:latest'
     volumes:
       - ./mongodb_data:/data/db
-    image: 'mongo:latest'
     ports:
       - '27100:27017'

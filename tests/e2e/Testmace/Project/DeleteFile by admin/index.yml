@@ -1,15 +1,17 @@
-children: []
-variables: {}
+enabled: true
+children:
+  - Asserts
+variablesArray: []
 type: RequestStep
 assignVariables: []
 requestData:
   request:
     method: DELETE
-    url: '${$env.baseURL}/files/5e824b6dd3468776ad95b04d'
+    url: '${$env.baseURL}/files/${$dynamicVar.file_user_2}'
   headers:
     - isChecked: true
       name: Authorization
-      value: 'Bearer ${$env.testJWT}'
+      value: 'Bearer ${$env.admin_token}'
   disabledInheritedHeaders: []
   params: []
   body:
@@ -23,4 +25,4 @@ requestData:
   strictSSL: Inherit
 authData:
   type: inherit
-name: DeleteFile
+name: DeleteFile by admin

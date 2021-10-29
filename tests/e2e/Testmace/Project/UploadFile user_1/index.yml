@@ -1,0 +1,43 @@
+children:
+  - Assertions
+type: RequestStep
+assignVariables:
+  - assign:
+      type: reference
+      refNodePath: Project
+    path: 'body[''id'']'
+    variable: file_user_1
+requestData:
+  request:
+    method: POST
+    url: '${$env.baseURL}/files/upload'
+  headers:
+    - isChecked: true
+      name: Authorization
+      value: 'Bearer ${$env.user_1_token}'
+  disabledInheritedHeaders: []
+  params: []
+  body:
+    type: FormData
+    jsonBody: ''
+    xmlBody: ''
+    textBody: ''
+    formData:
+      - isChecked: true
+        value: Test_PDF.pdf
+        name: uploadingForm
+        type: File
+      - isChecked: true
+        value: test pdf file
+        name: fileDescription
+        type: Text
+    file: ''
+    formURLEncoded: []
+  strictSSL: Inherit
+authData:
+  type: Bearer token
+  token: '${$env.user_1_token}'
+name: UploadFile user_1
+variablesArray:
+  - key: ''
+    value: ''

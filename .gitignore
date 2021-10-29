@@ -7,3 +7,6 @@ mongodb_data
 workspace.code-workspace
 **/.DS_Store
 src/MicroFileServer/.DS_Store
+**/.env
+workspace.code-workspace
+mongodb_data
