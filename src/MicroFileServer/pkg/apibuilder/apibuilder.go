@@ -4,6 +4,7 @@ import (
 	"github.com/MicroFileServer/service/middleware/auth"
 	"github.com/go-kit/kit/log"
 	"github.com/gorilla/mux"
+	"google.golang.org/grpc"
 )
 
 type ApiBulder interface {
@@ -11,5 +12,6 @@ type ApiBulder interface {
 	CreateServices()
 	AddAuthMiddleware(auth.Auther)
 	AddLogger(log.Logger)
+	BuildGRPC(*grpc.Server)
 }
 

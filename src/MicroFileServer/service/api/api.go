@@ -1,13 +1,14 @@
 package api
 
 import (
+	_ "github.com/MicroFileServer/docs"
 	"github.com/MicroFileServer/pkg/repositories"
 	"github.com/MicroFileServer/service/api/v1"
 	"github.com/MicroFileServer/service/middleware/auth"
 	kit_logger "github.com/go-kit/kit/log"
 	"github.com/gorilla/mux"
 	swag "github.com/swaggo/http-swagger"
-	_ "github.com/MicroFileServer/docs"
+	"google.golang.org/grpc"
 )
 
 type Api struct {
@@ -65,4 +66,8 @@ func (a *Api) Build(r *mux.Router) {
 	docs.Handler(
 		swag.WrapHandler,
 	)
+}
+
+func (a *Api) BuildGRPC(s *grpc.Server) {
+	a.V1.BuildGRPC(s)
 }

@@ -2,11 +2,13 @@ package v1
 
 import (
 	"github.com/MicroFileServer/pkg/repositories"
+	"github.com/MicroFileServer/proto"
 	"github.com/MicroFileServer/service/api/v1/files"
 	"github.com/MicroFileServer/service/middleware/auth"
 	"github.com/MicroFileServer/service/repoimp"
 	kit_logger "github.com/go-kit/kit/log"
 	"github.com/gorilla/mux"
+	"google.golang.org/grpc"
 )
 
 
@@ -22,6 +24,8 @@ type Api struct {
 	Logger			kit_logger.Logger
 	TestMode		bool
 	MaxFileSizeMB	int64
+
+	Endpoints		ApiEndpoints
 }
 
 type ApiEndpoints struct {
@@ -54,17 +58,22 @@ func (a *Api) CreateServices() {
 		RepoImp,
 		a.Logger,
 	)
+
+	a.Endpoints = a.buildEndpoints()
 }
 
 func (a *Api) Build(r *mux.Router) {
 	router := r.PathPrefix("/").Subrouter()
-	endpoints := a.buildEndpoints()
 
 	files.NewHTTPServer(
 		&files.Config{
 			MaxFileSizeMB: a.MaxFileSizeMB,
 		},
-		endpoints.Files,
+		a.Endpoints.Files,
 		router,
 	)
+}
+
+func (a *Api) BuildGRPC(s *grpc.Server) {
+	proto.RegisterMicroFileServerServer(s, files.NewGRPCServer(a.Endpoints.Files))
 }

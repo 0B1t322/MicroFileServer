@@ -2,18 +2,20 @@ package app
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
 	"github.com/MicroFileServer/pkg/repositories"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
 
 	"github.com/MicroFileServer/pkg/apibuilder"
 	"github.com/MicroFileServer/pkg/config"
+	"github.com/MicroFileServer/service/middleware/auth"
 	kl "github.com/go-kit/kit/log"
 	klogrus "github.com/go-kit/kit/log/logrus"
-	"github.com/MicroFileServer/service/middleware/auth"
 )
 
 type App struct {
@@ -22,12 +24,15 @@ type App struct {
 	Port			string
 	Logger			kl.Logger
 	auth			*auth.Auth
+	GRPCPort		string
 
+	GRPCServer		*grpc.Server
 }
 
 func New(cfg *config.Config) *App {
 	app := &App{}
 	app.Port = cfg.App.AppPort
+	app.GRPCPort = cfg.App.GrpcPort
 	if _rep, err := repositories.New(&repositories.Config{
 		DBURI: cfg.DB.URI,
 	}); err != nil {
@@ -56,6 +61,7 @@ func New(cfg *config.Config) *App {
 	)
 
 	app.Logger = klogrus.NewLogger(log.StandardLogger())
+	app.GRPCServer = grpc.NewServer()
 
 	return app
 }
@@ -66,11 +72,19 @@ func (a *App) AddApi(Builders ...apibuilder.ApiBulder) {
 		Builder.AddAuthMiddleware(a.auth)
 		Builder.CreateServices()
 		Builder.Build(a.Router)
+		Builder.BuildGRPC(a.GRPCServer)
 	}
 }
 
 func (a *App) Start() {
-	log.Infof("Starting Application is port %s", a.Port)
+	if a.GRPCPort != "" {
+		go a.StartGRPC()
+	}
+	a.StartHTTP()
+}
+
+func (a *App) StartHTTP() {
+	log.Infof("Starting Application in port %s", a.Port)
 	s := &http.Server{
 		Addr: fmt.Sprintf(":%s",a.Port),
 		Handler: a.Router,
@@ -81,5 +95,17 @@ func (a *App) Start() {
 	}
 	if err := s.ListenAndServe(); err != nil {
 		log.Panicf("Failed to start application %v", err)
+	}
+}
+
+func (a *App) StartGRPC() {
+	log.Infof("Starting GRPC Application in port %s", a.GRPCPort)
+	grpcListen, err := net.Listen("tcp", fmt.Sprintf(":%s", a.GRPCPort))
+	if err != nil {
+		log.Panicf("Failed to start grpc application %v", err)
+	}
+
+	if err := a.GRPCServer.Serve(grpcListen); err != nil {
+		log.Panicf("Failed to start grpc application %v", err)
 	}
 }

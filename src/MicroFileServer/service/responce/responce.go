@@ -58,6 +58,10 @@ type HTTPErrResponce interface {
 	WriteMessage(w http.ResponseWriter) error
 }
 
+type GRPCResponce interface {
+	GRPCEncode(ctx context.Context) (interface{}, error)
+}
+
 type Responce struct {
 	Status *statuscode.StatusCode
 }

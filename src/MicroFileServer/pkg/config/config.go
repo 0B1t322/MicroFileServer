@@ -33,6 +33,7 @@ type RolesConfig struct {
 
 type AppConfig struct {
 	AppPort  		string 	`envconfig:"MFS_APP_PORT" json:"appPort"`
+	GrpcPort		string	`envconfig:"MFS_APP_GRPC_PORT" json:"grpcPort"`
 	TestMode		bool	`envconfig:"MFS_APP_TEST_MODE" json:"testMode"`
 	MaxFileSize		int64	`envconfig:"MFS_APP_MAX_FILE_SIZE" json:"maxFileSize"`
 }

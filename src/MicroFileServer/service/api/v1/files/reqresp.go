@@ -14,6 +14,7 @@ import (
 	"github.com/MicroFileServer/pkg/models/file"
 	"github.com/MicroFileServer/pkg/statuscode"
 	"github.com/MicroFileServer/pkg/urlvalue/encode"
+	"github.com/MicroFileServer/proto"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -147,6 +148,17 @@ func (d *DeleteFileReq) GetID() string {
 	return d.FileID
 }
 
+func GRPCDecodeDeleteFileReq(
+	ctx		context.Context,
+	r		interface{},
+) (interface{}, error) {
+	req := r.(*proto.DeleteFileReq)
+	
+	return &DeleteFileReq{
+		FileID: req.FileId,
+	}, nil
+}
+
 func HTTPDecodeDeleteFileReq(
 	ctx		context.Context,
 	r		*http.Request,
@@ -172,6 +184,10 @@ func (resp *DeleteFileResp) Encode(w http.ResponseWriter) error {
 
 func (resp *DeleteFileResp) Headers(ctx context.Context, w http.ResponseWriter) {
 	return
+}
+
+func (resp *DeleteFileResp) GRPCResponce(ctx context.Context) (interface{}, error) {
+	return &proto.DeleteFileResp{}, nil
 }
 
 type GetFileReq struct {
