@@ -10,6 +10,9 @@ trigger:
 resources:
 - repo: self
 
+pool:
+  vmImage: 'ubuntu-latest'
+
 variables:
   CGO_ENABLED: 0
   GOOS: linux
@@ -42,8 +45,6 @@ stages:
   jobs:
   - job: Build
     displayName: Build
-    pool:
-      vmImage: 'ubuntu-latest'
     steps:
     - task: Go@0
       displayName: build
