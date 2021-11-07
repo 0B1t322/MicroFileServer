@@ -6,8 +6,8 @@ import (
 
 	"github.com/MicroFileServer/pkg/models/file"
 	op_err "github.com/MicroFileServer/pkg/repositories/errors"
-	"go.mongodb.org/mongo-driver/bson"
 	"github.com/MicroFileServer/pkg/repositories/files"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -161,7 +161,7 @@ type getFilesQueryBuilder struct {
 }
 
 func (g *getFilesQueryBuilder) SetFileSender(userid string) GetFilesBuilder {
-	g.filter["fileSender"] = userid
+	g.filter["metadata.fileSender"] = userid
 	return g
 }
 
@@ -194,7 +194,6 @@ func (f *FilesMongoDBImp) GetFiles(
 			opt = opt.SetSort(builder.sort)
 		}
 	}
-
 	files := []*file.File{}
 	{
 		if err := f.Repo.GetAllFiltered(

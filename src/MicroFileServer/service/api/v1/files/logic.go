@@ -197,7 +197,6 @@ func (s *Server) GetFiles(
 			http.StatusInternalServerError,
 		)
 	}
-
 	return files, nil
 }
 
