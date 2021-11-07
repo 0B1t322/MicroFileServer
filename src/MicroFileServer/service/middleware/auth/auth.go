@@ -51,8 +51,8 @@ func NewAuth(
 		Claim: cfg.Audience,
 	}
 
-	refreshTime := 24*time.Hour
-	if cfg.Testmode {
+	if !cfg.Testmode {
+		refreshTime := 24*time.Hour
 		jwks, err := keyfunc.Get(
 			cfg.KeyURL, 
 			keyfunc.Options{
@@ -77,8 +77,6 @@ func NewAuth(
 		}
 		a.jwks = jwks
 	}
-
-
 
 	if cfg.Testmode {
 		a.BuildTestAuthMiddleware()

@@ -3,9 +3,8 @@ services:
   api:
     build: './api'
     environment:
-      - TZ=Europe/Moscow
       - MFS_MONGO_URI=mongodb://root:root@db:27017/mfs?authSource=admin
-      - MFS_APP_TEST_MODE=${MFS_APP_TEST_MODE}
+      - MFS_APP_TEST_MODE=${MFS_APP_TEST_MODE:-true}
       - MFS_APP_PORT=8080
       - MFS_APP_MAX_FILE_SIZE=100
       - MFS_APP_PATH_PREFIX="/api/mfs"
