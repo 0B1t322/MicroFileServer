@@ -3,10 +3,10 @@
 mode=$1
 mode=${mode:-development}
 
-apiBuildFolder="./api/"
+apiBuildFolder="./src/MicroFileServer/"
 
 if [[ "$mode" == "development" ]]; then
-  apiBuildFolder="api/"
+  apiBuildFolder="./src/MicroFileServer/"
   echo "Run tests on development machine. Use '$apiBuildFolder' to build 'api'
   Please ensure that you stop all instances of backend
   Tests require installed node js"
@@ -42,7 +42,7 @@ testMaceFindResult=$(npm list -g --depth=1 | grep 'testmace/cli@1.3.1')
 
 if [[ -z "$testMaceFindResult" ]]; then
   echo "You must install @testmace/cli@1.3.1
-  sudo npm_config_user=root npm install --global @testmace/cli@1.3.1"
+  npm install --global @testmace/cli@1.3.1"
   exit 2
 fi
 
@@ -63,7 +63,14 @@ logGroupEnd
 
 echo "Running tests..."
 ./tests/e2e/Testmace/waitWebApp.sh
-testmace-cli -e localEnv -o tests-out --reporter=junit ./tests/e2e/Testmace/Project
+if [[ "$mode" == "ci" ]]; then
+  testmace-cli -e e2e -o tests-out --reporter=junit ./tests/e2e/Testmace/Project
+else
+  testmaceOut=$(testmace-cli -e e2e ./tests/e2e/Testmace/Project)
+  echo "$testmaceOut"
+  mkdir -p tests-out
+  echo "$testmaceOut" > "tests-out/$(date +"%Y-%m-%d-%I-%M-%p").log"
+fi
 
 logGroupStart "Show api logs..."
 $dc logs api
