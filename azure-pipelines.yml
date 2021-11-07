@@ -74,7 +74,11 @@ stages:
         buildType: 'current'
         targetPath: 'deploy'
     - script: npm install --global @testmace/cli@1.3.1
-    - script: ./runTests.sh ci
+    - script: chmod +x ./runTests.sh
+    - task: Bash@3
+      inputs:
+        filePath: './runTests.sh'
+        arguments: 'ci'
     - publish: ./tests-out
       artifact: olympiad-e2e-test-results
     - task: PublishTestResults@2
