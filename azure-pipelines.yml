@@ -14,13 +14,13 @@ variables:
   CGO_ENABLED: 0
   GOOS: linux
   ${{ if notIn(variables['Build.SourceBranch'], 'refs/heads/master', 'refs/tags/develop') }}:
-    buildImage: false
+    packImage: false
     deployService: false
     deployEnvironment: 'no'
     imageTags: 'no'
     serviceName: 'no'
   ${{ if eq(variables['Build.SourceBranch'], 'refs/tags/develop') }}:
-    buildImage: true
+    packImage: true
     deployService: true
     deployEnvironment: development
     imageTags: |
@@ -28,7 +28,7 @@ variables:
       develop
     serviceName: itlab-develop_mfs
   ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
-    buildImage: true
+    packImage: true
     deployService: true
     deployEnvironment: production
     imageTags: |
@@ -38,7 +38,7 @@ variables:
 
 stages:
 - stage: Build
-  displayName: Build image
+  displayName: Build service
   jobs:
   - job: Build
     displayName: Build
@@ -59,12 +59,13 @@ stages:
         OverWrite: true
     - publish: $(Build.ArtifactStagingDirectory)
       artifact: itlab-mfs-build
-- stage: buildImage
-  condition: and(succeeded(), ${{variables.buildImage}})
+
+- stage: packImage
+  condition: and(succeeded(), ${{variables.packImage}})
   displayName: Pack docker image
   jobs:
-  - job: build
-    displayName: Build
+  - job: pack
+    displayName: Pack
     steps:
     - download: current
       artifact: itlab-mfs-build
@@ -76,7 +77,7 @@ stages:
         command: 'buildAndPush'
         Dockerfile: '$(Pipeline.Workspace)/itlab-mfs-build/Dockerfile'
         buildContext: '$(Pipeline.Workspace)/itlab-mfs-build'
-        tags: ${{variables.ImageTags}}
+        tags: ${{variables.imageTags}}
     - task: Docker@2
       displayName: Publish to private docker registry
       inputs:
@@ -85,7 +86,7 @@ stages:
         command: 'buildAndPush'
         Dockerfile: '$(Pipeline.Workspace)/itlab-mfs-build/Dockerfile'
         buildContext: '$(Pipeline.Workspace)/itlab-mfs-build'
-        tags: ${{variables.ImageTags}}
+        tags: ${{variables.imageTags}}
 - stage: deploy
   displayName: Deploy
   condition: and(succeeded(), ${{variables.deployService}})
