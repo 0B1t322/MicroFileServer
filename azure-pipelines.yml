@@ -74,7 +74,11 @@ stages:
         buildType: 'current'
         targetPath: 'deploy'
     - script: npm install --global @testmace/cli@1.3.1
-    - script: chmod +x ./runTests.sh
+      displayName: install testmace
+    - script: |
+        chmod +x ./runTests.sh
+        chmod +x ./tests/e2e/Testmace/waitWebApp.sh
+      displayName: chmod +x on scripts
     - task: Bash@3
       inputs:
         filePath: './runTests.sh'

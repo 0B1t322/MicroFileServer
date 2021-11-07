@@ -22,6 +22,19 @@ else
 fi
 export API_BUILD_FOLDER=$apiBuildFolder
 
+logGroupStart() {
+  if [[ "$mode" == "ci" ]]; then
+    echo "##[group]$1"
+  else
+    echo $1
+  fi
+}
+logGroupEnd() {
+  if [[ "$mode" == "ci" ]]; then
+    echo "##[endgroup]"
+  fi
+}
+
 # Check testmace tool is installed
 
 testMaceFindResult=$(npm list -g --depth=1 | grep 'testmace/cli@1.3.1')
@@ -35,26 +48,31 @@ fi
 
 dc="docker-compose -f docker-compose.yaml -f docker-compose.override.yaml  -f docker-compose.e2e.yaml -p mfs-e2e-tests"
 
-echo "Ensuring to e2e environment is empty..."
+logGroupStart "Ensuring to e2e environment is empty..."
 $dc down -v
+logGroupEnd
 
-echo "Preparing images..."
+logGroupStart "Preparing images..."
 $dc pull db
 $dc build api
 
 
-echo "Running db and api..."
+logGroupStart "Running db and api..."
 $dc up -d db api
+logGroupEnd
 
 echo "Running tests..."
 ./tests/e2e/Testmace/waitWebApp.sh
 testmace-cli -e localEnv -o tests-out --reporter=junit ./tests/e2e/Testmace/Project
 
-echo "Show api logs..."
+logGroupStart "Show api logs..."
 $dc logs api
+logGroupEnd
 
-echo "Show db logs..."
+logGroupStart "Show db logs..."
 $dc logs db
+logGroupEnd
 
-echo "Clean up e2e environment..."
+logGroupStart "Clean up e2e environment..."
 $dc down -v
+logGroupEnd
