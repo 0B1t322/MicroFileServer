@@ -161,7 +161,7 @@ type getFilesQueryBuilder struct {
 }
 
 func (g *getFilesQueryBuilder) SetFileSender(userid string) GetFilesBuilder {
-	g.filter["fileSender"] = userid
+	g.filter["metadata.fileSender"] = userid
 	return g
 }
 
