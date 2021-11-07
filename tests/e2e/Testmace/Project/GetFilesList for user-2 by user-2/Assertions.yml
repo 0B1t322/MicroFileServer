@@ -1,0 +1,22 @@
+enabled: true
+children: []
+variablesArray: []
+type: Assertion
+assertions:
+  - disabled: false
+    negative: false
+    type: compare
+    actualValue: '${$response.code}'
+    operator: equal
+    expectedValueType: string
+    name: Returns 200
+    expectedValue: '200'
+  - disabled: false
+    negative: false
+    type: compare
+    actualValue: '${$response.body.length}'
+    operator: equal
+    expectedValueType: number
+    name: Return only one user2 file
+    expectedValue: '1'
+name: Assertions

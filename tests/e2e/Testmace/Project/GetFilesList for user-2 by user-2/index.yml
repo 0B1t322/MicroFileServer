@@ -1,4 +1,5 @@
-children: []
+children:
+  - Assertions
 type: RequestStep
 assignVariables: []
 requestData:
@@ -26,5 +27,5 @@ requestData:
   followRedirect: Inherit
 authData:
   type: inherit
-name: GetFilesList
+name: GetFilesList for user-2 by user-2
 variablesArray: []

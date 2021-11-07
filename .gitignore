@@ -5,3 +5,4 @@ auth_config.json
 **/src
 workspace.code-workspace
 mongodb_data
+tests-out

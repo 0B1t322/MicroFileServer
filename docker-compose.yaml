@@ -4,5 +4,4 @@ services:
     build: './api'
     environment:
       - TZ=Europe/Moscow
-    ports:
-      - '8080:8080'
+
