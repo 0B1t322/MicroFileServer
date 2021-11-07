@@ -1,0 +1,14 @@
+enabled: true
+children: []
+variablesArray: []
+type: Assertion
+assertions:
+  - disabled: false
+    negative: false
+    type: compare
+    actualValue: '${$response.code}'
+    operator: equal
+    expectedValueType: string
+    expectedValue: '200'
+    name: Retruns 200
+name: Assertions

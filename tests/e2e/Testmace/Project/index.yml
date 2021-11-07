@@ -18,7 +18,7 @@ children:
   - UploadFile user_2
   - GetFilesListForUser for user-1 by user-1
   - GetFilesListForUser for user-2 by user-1
-  - GetFilesList
+  - GetFilesList for user-2 by user-2
   - DownloadFile
   - DeleteFile by user_2
   - DeleteFile by user_1
