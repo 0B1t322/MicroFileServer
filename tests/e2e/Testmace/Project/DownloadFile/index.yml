@@ -5,11 +5,8 @@ assignVariables: []
 requestData:
   request:
     method: GET
-    url: '${$env.baseURL}/download/${$dynamicVar.file_user_1}'
-  headers:
-    - isChecked: true
-      name: Authorization
-      value: '${$env.user_1_token}'
+    url: '${$env.baseURL}/files/download/${$dynamicVar.file_user_1}'
+  headers: []
   disabledInheritedHeaders: []
   params: []
   body:
