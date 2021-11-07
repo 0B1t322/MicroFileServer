@@ -60,6 +60,29 @@ stages:
     - publish: $(Build.ArtifactStagingDirectory)
       artifact: itlab-mfs-build
 
+- stage: test
+  condition: succeeded()
+  displayName: Test
+  jobs:
+  - job: e2e
+    steps:
+    - task: DownloadPipelineArtifact@2
+      displayName: download service build
+      inputs:
+        artifactName: 'itlab-mfs-build'
+        buildType: 'current'
+        targetPath: 'deploy'
+    - script: npm install --global @testmace/cli@1.3.1
+    - script: ./runTests.sh ci
+    - publish: ./tests-out
+      artifact: olympiad-e2e-test-results
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: JUnit
+        testResultsFiles: '*.xml'
+        searchFolder: ./tests-out
+        failTaskOnFailedTests: true
+
 - stage: packImage
   condition: and(succeeded(), ${{variables.packImage}})
   displayName: Pack docker image
