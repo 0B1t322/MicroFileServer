@@ -55,7 +55,7 @@ logGroupEnd
 logGroupStart "Preparing images..."
 $dc pull db
 $dc build api
-
+logGroupEnd
 
 logGroupStart "Running db and api..."
 $dc up -d db api

@@ -80,6 +80,7 @@ stages:
         chmod +x ./tests/e2e/Testmace/waitWebApp.sh
       displayName: chmod +x on scripts
     - task: Bash@3
+      displayName: run tests
       inputs:
         filePath: './runTests.sh'
         arguments: 'ci'
