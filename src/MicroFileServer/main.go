@@ -1,11 +1,12 @@
 package main
 
 import (
-
 	"github.com/MicroFileServer/app"
 	"github.com/MicroFileServer/pkg/config"
+	"github.com/MicroFileServer/pkg/config/amqp"
 	"github.com/MicroFileServer/service/api"
 	v1 "github.com/MicroFileServer/service/api/v1"
+	"github.com/MicroFileServer/service/api/v1/files"
 )
 
 // @title MicroFileService API
@@ -25,6 +26,21 @@ func main() {
 				TestMode: cfg.App.TestMode,
 				V1Config: v1.Config{
 					MaxFileSizeMB: cfg.App.MaxFileSize,
+					AmqpLayerConfig: v1.AmqpLayerConfig{
+						Files: files.AmqpServerConfig{
+							Consumers: files.Consumers{
+								DeleteFile: amqp.Subscriber{
+									Queue: "/mfs/delete_file",
+									Consumer: "mfs",
+									AutoAck: false,
+									NoLocal: false,
+									NoWait: false,
+									Exclusive: false,
+									Args: nil,
+								},
+							},
+						},
+					},
 				},
 			},
 			app.Repository,

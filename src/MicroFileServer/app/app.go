@@ -5,15 +5,17 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/MicroFileServer/pkg/amqp/manager"
 	"github.com/MicroFileServer/pkg/repositories"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
+	"github.com/streadway/amqp"
 
 	"github.com/MicroFileServer/pkg/apibuilder"
 	"github.com/MicroFileServer/pkg/config"
+	"github.com/MicroFileServer/service/middleware/auth"
 	kl "github.com/go-kit/kit/log"
 	klogrus "github.com/go-kit/kit/log/logrus"
-	"github.com/MicroFileServer/service/middleware/auth"
 )
 
 type App struct {
@@ -22,7 +24,7 @@ type App struct {
 	Port			string
 	Logger			kl.Logger
 	auth			*auth.Auth
-
+	Manager			manager.Manager
 }
 
 func New(cfg *config.Config) *App {
@@ -57,6 +59,28 @@ func New(cfg *config.Config) *App {
 
 	app.Logger = klogrus.NewLogger(log.StandardLogger())
 
+	conn, err := amqp.Dial(cfg.AMQP.AMQPURI)
+	if err != nil {
+		log.WithFields(
+			log.Fields{
+				"package": "app",
+				"func": "new",
+				"err": err,
+			},
+		).Panic("failed to connect to RabbitMQ")
+	}
+
+	app.Manager, err = manager.NewManager(conn)
+	if err != nil {
+		log.WithFields(
+			log.Fields{
+				"package": "app",
+				"func": "new",
+				"err": err,
+			},
+		).Panic("failed to init rabbit Manager")
+	}
+
 	return app
 }
 
@@ -66,6 +90,7 @@ func (a *App) AddApi(Builders ...apibuilder.ApiBulder) {
 		Builder.AddAuthMiddleware(a.auth)
 		Builder.CreateServices()
 		Builder.Build(a.Router)
+		Builder.BuildAMQP(a.Manager)
 	}
 }
 
@@ -79,6 +104,14 @@ func (a *App) Start() {
 		MaxHeaderBytes: 1 << 20,
 		IdleTimeout: 2*time.Second,
 	}
+
+	go func() {
+		log.Info("Staring AMQP Application layer")
+		if err := a.Manager.Start(); err != nil {
+			log.Panicf("Failed to start amqp application layer, err: %v", err)
+		}
+	}()
+
 	if err := s.ListenAndServe(); err != nil {
 		log.Panicf("Failed to start application %v", err)
 	}

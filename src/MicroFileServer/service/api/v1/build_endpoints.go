@@ -52,3 +52,13 @@ func (a *Api) buildEndpoints() ApiEndpoints {
 	)(endpoints.Files.DownloadFile)
 	return endpoints
 }
+
+func (a *Api) buildAMQPEndpoints() ApiEndpoints {
+	endpoints := a.endpoints()
+
+	endpoints.Files.DeleteFile = endpoint.Chain(
+		mgsess.PutMongoSessIntoCtx(),
+	)(endpoints.Files.DeleteFile)
+	
+	return endpoints
+}

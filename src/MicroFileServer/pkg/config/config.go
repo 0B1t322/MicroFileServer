@@ -13,6 +13,11 @@ type Config struct {
 	DB   *DBConfig   		`json:"DbOptions"`
 	Auth *AuthConfig 		`json:"AuthOptions"`
 	App  *AppConfig  		`json:"AppOptions"`
+	AMQP *AMQPConfig		`json:"AMQPOptions"`
+}
+
+type AMQPConfig	struct {
+	AMQPURI			string	`envconfig:"MFS_AMQP_URI" json:"amqpUri"`
 }
 
 type DBConfig struct {

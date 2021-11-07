@@ -52,30 +52,33 @@ func NewAuth(
 	}
 
 	refreshTime := 24*time.Hour
-
-	jwks, err := keyfunc.Get(
-		cfg.KeyURL, 
-		keyfunc.Options{
-			RefreshInterval: &refreshTime,
-			RefreshErrorHandler: func(err error) {
-				log.WithFields(
-					log.Fields{
-						"func": "refreshTokernErrorHandle",
-						"err": err,
-					},
-				).Error()
+	if cfg.Testmode {
+		jwks, err := keyfunc.Get(
+			cfg.KeyURL, 
+			keyfunc.Options{
+				RefreshInterval: &refreshTime,
+				RefreshErrorHandler: func(err error) {
+					log.WithFields(
+						log.Fields{
+							"func": "refreshTokernErrorHandle",
+							"err": err,
+						},
+					).Error()
+				},
 			},
-		},
-	)
-	if err != nil {
-		log.WithFields(
-			log.Fields{
-				"func": "authMiddleware",
-				"error": err,
-			},
-		).Panic("Failed to create jwks")
+		)
+		if err != nil {
+			log.WithFields(
+				log.Fields{
+					"func": "authMiddleware",
+					"error": err,
+				},
+			).Panic("Failed to create jwks")
+		}
+		a.jwks = jwks
 	}
-	a.jwks = jwks
+
+
 
 	if cfg.Testmode {
 		a.BuildTestAuthMiddleware()
