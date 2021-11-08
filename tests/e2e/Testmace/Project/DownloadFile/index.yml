@@ -5,7 +5,7 @@ assignVariables: []
 requestData:
   request:
     method: GET
-    url: '${$env.baseURL}/files/download/${$dynamicVar.file_user_1}'
+    url: '${$env.baseURL}/download/${$dynamicVar.file_user_1}'
   headers: []
   disabledInheritedHeaders: []
   params: []

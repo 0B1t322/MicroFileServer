@@ -3,7 +3,7 @@ FROM golang:1.16 AS builder
 WORKDIR /go/src/MFS/
 
 ENV CGO_ENABLED=0
-COPY go.* .
+COPY go.* ./
 RUN go mod download
 
 COPY . .
