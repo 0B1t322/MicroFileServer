@@ -63,6 +63,20 @@ func NewAMQPServer(
 					return ctx
 				},
 			),
+			amqptransport.SubscriberErrorEncoder(
+				func(
+					ctx context.Context, 
+					err error, 
+					deliv *amqp.Delivery, 
+					ch amqptransport.Channel, 
+					pub *amqp.Publishing,
+				) {
+					status, _ := statuscode.GetStatus(err)
+					if status == http.StatusNotFound {
+						deliv.Ack(true)
+					}	
+				},
+			),
 		),
 		Cfg: cfg.DeleteFile,
 	}

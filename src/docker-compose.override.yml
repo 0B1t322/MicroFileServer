@@ -23,20 +23,15 @@ services:
     #     networks:
     #       - database
     mfs.amqp:
-        image: 'rabbitmq:3-management-alpine'
-        container_name: 'mfs.amqp'
-        volumes:
-          - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
-          - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
-          - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+        image: rabbitmq:3-management
         environment:
             RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
             RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
-        networks:
-          - amqp
         ports:
           - 5672:5672
           - 15672:15672
+        networks:
+          - amqp
 
 
 

@@ -12,3 +12,4 @@ workspace.code-workspace
 mongodb_data
 **/.docker
 tests-out
+**/main_test.go
