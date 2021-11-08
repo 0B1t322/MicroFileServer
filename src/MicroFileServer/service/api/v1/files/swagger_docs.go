@@ -47,7 +47,7 @@ func (Server) HTTPUploadFile() {}
 // 
 // @Description download file from service
 // 
-// @Router /files/download/{id} [get]
+// @Router /download/{id} [get]
 // 
 // @Param id path string true "id of the file"
 // 
