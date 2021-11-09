@@ -6,10 +6,7 @@ requestData:
   request:
     method: GET
     url: '${$env.baseURL}/download/${$dynamicVar.file_user_1}'
-  headers:
-    - isChecked: true
-      name: Authorization
-      value: '${$env.user_1_token}'
+  headers: []
   disabledInheritedHeaders: []
   params: []
   body:

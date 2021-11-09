@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/gridfs"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -84,7 +85,7 @@ func (f *FilesMongoDBImp) DownloadFile(
 	buf := bytes.NewBuffer(nil)
 
 	_, err = bucket.DownloadToStream(fileId, buf)
-	if err == mongo.ErrNoDocuments {
+	if err == mongo.ErrNoDocuments || err == gridfs.ErrFileNotFound {
 		return nil, op_err.ErrDocumentNotFound
 	} else if err != nil {
 		return nil, err
@@ -146,7 +147,7 @@ func (f *FilesMongoDBImp) DeleteFile(
 		return err
 	}
 
-	if err := bucket.Delete(fileId); err == mongo.ErrNoDocuments {
+	if err := bucket.Delete(fileId); err == mongo.ErrNoDocuments || err == gridfs.ErrFileNotFound {
 		return op_err.ErrDocumentNotFound
 	} else if err != nil {
 		return err

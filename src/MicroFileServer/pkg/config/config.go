@@ -55,7 +55,7 @@ func GetConfig() *Config {
 			"function": "GetConfig.ReadFile",
 			"error":    err,
 		},
-		).Warn("Can't read config.json file, shutting down...")
+		).Warn("Can't read config.json file")
 	}
 	err = json.Unmarshal(data, &config)
 	if err != nil {
@@ -63,7 +63,7 @@ func GetConfig() *Config {
 			"function": "GetConfig.Unmarshal",
 			"error":    err,
 		},
-		).Warn("Can't correctly parse json from config.json, shutting down...")
+		).Warn("Can't correctly parse json from config.json")
 	}
 
 	data, err = ioutil.ReadFile("auth_config.json")
@@ -72,7 +72,7 @@ func GetConfig() *Config {
 			"function": "GetConfig.ReadFile",
 			"error":    err,
 		},
-		).Warn("Can't read auth_config.json file, shutting down...")
+		).Warn("Can't read auth_config.json file")
 	}
 	err = json.Unmarshal(data, &config)
 	if err != nil {
@@ -80,7 +80,7 @@ func GetConfig() *Config {
 			"function": "GetConfig.Unmarshal",
 			"error":    err,
 		},
-		).Warning("Can't correctly parse json from auth_config.json, shutting down...")
+		).Warning("Can't correctly parse json from auth_config.json")
 	}
 
 	err = envconfig.Process("mfs", &config)

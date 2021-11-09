@@ -8,61 +8,7 @@
     },
     "basePath": "/api/mfs",
     "paths": {
-        "/files": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "return files info\nif you are not admin you can get info only about you files",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "files"
-                ],
-                "summary": "get files",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "id of the user which files you want get",
-                        "name": "user",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "sort by ascendig; can be name or date ",
-                        "name": "sorted_by",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/file.File"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/err.Message"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/err.Message"
-                        }
-                    }
-                }
-            }
-        },
-        "/files/download/{id}": {
+        "/download/{id}": {
             "get": {
                 "description": "download file from service",
                 "produces": [
@@ -105,6 +51,60 @@
                     },
                     "404": {
                         "description": "if file not found after upload",
+                        "schema": {
+                            "$ref": "#/definitions/err.Message"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/err.Message"
+                        }
+                    }
+                }
+            }
+        },
+        "/files": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "return files info\nif you are not admin you can get info only about you files",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "summary": "get files",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "id of the user which files you want get",
+                        "name": "user",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "sort by ascendig; can be name or date ",
+                        "name": "sorted_by",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/file.File"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/err.Message"
                         }

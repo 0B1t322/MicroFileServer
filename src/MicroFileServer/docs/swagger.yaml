@@ -63,6 +63,46 @@ info:
   title: MicroFileService API
   version: "1.0"
 paths:
+  /download/{id}:
+    get:
+      description: download file from service
+      parameters:
+      - description: id of the file
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - '*/*'
+      - image/jpeg
+      - image/png
+      - image/gif
+      - video/*
+      - audio/*
+      - image/*
+      - application/pdf
+      - application/msword
+      - application/vnd.ms-excel
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: if file id is not valid
+          schema:
+            $ref: '#/definitions/err.Message'
+        "404":
+          description: if file not found after upload
+          schema:
+            $ref: '#/definitions/err.Message'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/err.Message'
+      summary: download file
+      tags:
+      - files
   /files:
     get:
       description: |-
@@ -172,46 +212,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: get file info
-      tags:
-      - files
-  /files/download/{id}:
-    get:
-      description: download file from service
-      parameters:
-      - description: id of the file
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - '*/*'
-      - image/jpeg
-      - image/png
-      - image/gif
-      - video/*
-      - audio/*
-      - image/*
-      - application/pdf
-      - application/msword
-      - application/vnd.ms-excel
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: file
-        "400":
-          description: if file id is not valid
-          schema:
-            $ref: '#/definitions/err.Message'
-        "404":
-          description: if file not found after upload
-          schema:
-            $ref: '#/definitions/err.Message'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/err.Message'
-      summary: download file
       tags:
       - files
   /files/upload:

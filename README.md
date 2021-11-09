@@ -1,11 +1,30 @@
 # MicroFileServer
-[![Build Status](https://dev.azure.com/rtuitlab/RTU%20IT%20Lab/_apis/build/status/MicroFileServer?branchName=master)](https://dev.azure.com/rtuitlab/RTU%20IT%20Lab/_build/latest?definitionId=104&branchName=master)
+[![Build Status](https://dev.azure.com/rtuitlab/RTU%20IT%20Lab/_apis/build/status/MicroFileServer?branchName=master)](https://dev.azure.com/rtuitlab/RTU%20IT%20Lab/_build/latest?definitionId=104&branchName=master) [![Azure DevOps tests (compact)](https://img.shields.io/azure-devops/tests/rtuitlab/RTU%2520IT%2520Lab/104/master?compact_message)](https://dev.azure.com/rtuitlab/RTU%20IT%20Lab/_build/latest?definitionId=104&branchName=master)
 
 Service for storing small files
 
 ## Documantation
 Can be open directly by swagger. All swagger files located in ```src/MicroFileServer/docs```.
 Or if the service is running in default settings http://localhost:8081/api/mfs/swagger/
+
+## Tests
+Project contains e2e tests, using TestMace
+
+### E2E
+**Requirements**:
+- Node.JS
+- Docker
+
+1. Install testmace cli
+    ```bash
+    npm install --global @testmace/cli@1.3.1
+    ```
+1. Make sure that the local development server (and db) is turned off
+1. Run tests
+    ```bash
+    ./runTests.sh
+    ```
+1. Results can be found in `tests-out`
 
 ## Configuration
 
@@ -43,30 +62,20 @@ File ```auth_config.json``` must contain next content:
 
 or you can configure by file in ```src/.env``` that should contains:
 ```.env
-// Database settings
-MONGO_INITDB_ROOT_USERNAME=root
-MONGO_INITDB_ROOT_PASSWORD=root
-MONGO_INITDB_DATABASE=MFS
-
-
-MFS_MONGO_URI=mongodb://user:password@host:port/DBName?authSource=admin
-
-// Roles int "itlab" claim
-MFS_AUTH_ROLE_USER=user
-MFS_AUTH_ROLE_ADMIN=mfs.admin
 // url to jwks.json
 MFS_AUTH_KEY_URL=https://example.com
-// audience for jwt
-MFS_AUTH_AUDIENCE=claim
 // issuer fow jwt
 MFS_AUTH_ISSUER=https://example.com
-// app port
+```
+<!-- MFS_MONGO_URI=mongodb://user:password@host:port/DBName?authSource=admin -->
+<!-- // audience for jwt
+MFS_AUTH_AUDIENCE=claim -->
+<!-- // app port
 MFS_APP_PORT=8081
 // testmode can be true or false
 MFS_APP_TEST_MODE=true
-// max file size that can be upload
-MFS_APP_MAX_FILE_SIZE=100
-```
+// max file size that can be upload in MB
+MFS_APP_MAX_FILE_SIZE=100 -->
 
 ## Build
 ### Requirements
@@ -85,3 +94,4 @@ docker-compose -f docker-compose.override.yml up --build
 ```
 
 server will run in ```http://localhost:8081```
+

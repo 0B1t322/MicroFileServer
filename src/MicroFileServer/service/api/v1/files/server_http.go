@@ -40,7 +40,7 @@ func NewHTTPServer(
 
 	// DownloadFile
 	r.Handle(
-		"/files/download/{id}",
+		"/download/{id}",
 		httptransport.NewServer(
 			enpoints.DownloadFile,
 			HTTPDecodeDownloadFileReq,
