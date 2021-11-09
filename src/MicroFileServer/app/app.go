@@ -47,6 +47,10 @@ func New(cfg *config.Config) *App {
 		log.SetLevel(log.InfoLevel)
 	} else {
 		log.SetLevel(log.DebugLevel)
+		log.Debug("Running in test mode")
+		log.Debug("admin role",cfg.Auth.AdminRole)
+		log.Debug("user role", cfg.Auth.UserRole)
+		log.Debug("Audience", cfg.Auth.Audience)
 	}
 	app.auth = auth.NewAuth(
 		&auth.Config{

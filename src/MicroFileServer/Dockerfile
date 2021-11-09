@@ -17,4 +17,4 @@ COPY --from=builder /go/src/MFS/main .
 ENV MFS_AUTH_ROLE_USER=user
 ENV MFS_AUTH_ROLE_ADMIN=mfs.admin
 
-CMD ["./main"]
+CMD printenv ; ./main

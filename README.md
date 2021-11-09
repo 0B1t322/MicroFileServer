@@ -143,6 +143,6 @@ server will run in ```http://localhost:8080```
 ## Standart launching with docker
 To run application in testmode with standart params write in root directory
 ```
-docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --build
+docker-compose -f docker-compose.override.yaml up --build
 ```
 
