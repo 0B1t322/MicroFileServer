@@ -10,8 +10,6 @@ services:
       MFS_APP_PATH_PREFIX: "/api/mfs"
       MFS_AUTH_KEY_URL: ${MFS_AUTH_KEY_URL}
       MFS_AUTH_ISSUER: ${MFS_AUTH_ISSUER}
-      MFS_AUTH_ROLE_USER: ${MFS_AUTH_ROLE_USER:-user}
-      MFS_AUTH_ROLE_ADMIN: ${MFS_AUTH_ROLE_ADMIN:-mfs.admin}
     ports:
       - '8080:8080'
     depends_on:
