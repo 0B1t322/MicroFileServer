@@ -13,8 +13,4 @@ FROM alpine:latest
 WORKDIR /root/
 COPY --from=builder /go/src/MFS/main .
 
-# Add standart roles
-ENV MFS_AUTH_ROLE_USER=user
-ENV MFS_AUTH_ROLE_ADMIN=mfs.admin
-
-CMD printenv ; ./main
+CMD ./main
