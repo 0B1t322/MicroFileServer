@@ -48,9 +48,9 @@ func New(cfg *config.Config) *App {
 	} else {
 		log.SetLevel(log.DebugLevel)
 		log.Debug("Running in test mode")
-		log.Debug("admin role",cfg.Auth.AdminRole)
-		log.Debug("user role", cfg.Auth.UserRole)
-		log.Debug("Audience", cfg.Auth.Audience)
+		log.Debug("admin role: ", 	StringOrNone(cfg.Auth.AdminRole))
+		log.Debug("user role: ", 	StringOrNone(cfg.Auth.UserRole))
+		log.Debug("Audience: ", 	StringOrNone(cfg.Auth.Audience))
 	}
 	app.auth = auth.NewAuth(
 		&auth.Config{
@@ -86,4 +86,11 @@ func (a *App) Start() {
 	if err := s.ListenAndServe(); err != nil {
 		log.Panicf("Failed to start application %v", err)
 	}
+}
+
+func StringOrNone(str string) string {
+	if str == "" {
+		return "None"
+	}
+	return str
 }
