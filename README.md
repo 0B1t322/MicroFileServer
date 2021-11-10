@@ -5,7 +5,7 @@ Service for storing small files
 
 ## Documantation
 Can be open directly by swagger. All swagger files located in ```src/MicroFileServer/docs```.
-Or if the service is running in default settings http://localhost:8081/api/mfs/swagger/
+Or if the service is running in default settings http://localhost:8080/api/mfs/swagger/
 
 ## Tests
 Project contains e2e tests, using TestMace
@@ -28,70 +28,121 @@ Project contains e2e tests, using TestMace
 
 ## Configuration
 
-File ```config.json``` must contain next content:
+### Required parameters
 
+If you want run application in production mode you need to add next paramets:
+
+in enviroment:
+```.env
+// url to jwks.json
+MFS_AUTH_KEY_URL=https://example.com
+// issuer fow jwt
+MFS_AUTH_ISSUER=https://example.com
+MFS_APP_TEST_MODE=false
+```
+
+or in json configs:
+file ```config.json```:
 ```js
 {
-  "DbOptions": {
-    "uri": "mongodb://user:password@localhost:27017/MicroFileServer", //uri connection string | env: MFS_MONGO_URI
-  },
-  "AppOptions": {
-    "testMode": true|false, //bool option for enabling Tests mode | env: MFS_APP_TEST_MODE
-    "appPort": "8081", //app port | env: MFS_APP_PORT
-    "maxFileSize": 100, //maximum file size for upload in MB | env: MFS_APP_MAX_FILE_SIZE
+    // other params....
+    // ...
+    "AppOptions": {
+    "testMode": false,
   }
 }
 ```
 
-File ```auth_config.json``` must contain next content:
+file ```auth_config.json```:
+```js
+{
+  "AuthOptions": {
+    "keyUrl": "https://examplesite/files/jwks.json", //url to jwks.json
+    "issuer" : "https://exampleissuersite.com", //issuer for JWT
+    // other params...
+    // ...
+  }
+}
+```
+
+### Standart params that can be override
+You can override standart params of this applicaton
+
+in ```config.json```:
+
+```js
+{
+  "DbOptions": {
+    "uri": "mongodb://user:password@localhost:27017/MicroFileServer", //uri connection to mongodb
+  },
+  "AppOptions": {
+    "appPort": "8080", //app port
+    "maxFileSize": 100, //maximum file size for upload in MB
+  }
+}
+```
+
+in ```auth_config.json```:
 
 ```js
 {
   "AuthOptions": {
-    "keyUrl": "https://examplesite/files/jwks.json", //url to jwks.json | env: MFS_AUTH_KEY_URL
-    "audience": "example_audience", //audince for JWT | env: MFS_AUTH_AUDIENCE
-    "issuer" : "https://exampleissuersite.com", //issuer for JWT | env: MFS_AUTH_ISSUER
+    "audience": "example_audience", //audince for JWT, claim where roles will search
     "roles": {
-        "user": "user", // user role that will be check in itlab claim | env: MFS_AUTH_ROLE_USER
-        "admin": "mfs.admin" // admin role | env: MFS_AUTH_ROLE_ADMIN
+        "user": "user", // user role that will be check if admin role not found
+        "admin": "mfs.admin" // admin role
     }
   }
 }
 
 ```
 
-or you can configure by file in ```src/.env``` that should contains:
+Or it can be override by enviroment:
 ```.env
-// url to jwks.json
-MFS_AUTH_KEY_URL=https://example.com
-// issuer fow jwt
-MFS_AUTH_ISSUER=https://example.com
+# user role that search if not find admin role
+MFS_AUTH_ROLE_USER=user
+MFS_AUTH_ROLE_ADMIN=mfs.admin
+
+# claim where the roles will be searched
+MFS_AUTH_AUDIENCE=itlab
+
+MFS_APP_PORT=8080
+
+# max uploading file size in MB
+MFS_APP_MAX_FILE_SIZE=100
+
+# mongodb uri
+MFS_MONGO_URI=mongodb://root:root@mfs.db:27017/MFS?authSource=admin
 ```
-<!-- MFS_MONGO_URI=mongodb://user:password@host:port/DBName?authSource=admin -->
-<!-- // audience for jwt
-MFS_AUTH_AUDIENCE=claim -->
-<!-- // app port
-MFS_APP_PORT=8081
-// testmode can be true or false
-MFS_APP_TEST_MODE=true
-// max file size that can be upload in MB
-MFS_APP_MAX_FILE_SIZE=100 -->
 
 ## Build
+
 ### Requirements
 - Go 1.16+
 
-after creating .env file in ```src/MicroFileServer``` write:
+
+if you want to run in nativaly by golang, you should have enviroments params in launching directory
+
+in ```src/MicroFileServer``` write:
 ```
 go build -o main
+```
+that will produce main binary file that can be launch by
+```
 ./main
 ```
 
 ## Build using docker
-after creating .env file in ```src``` write command in this directory:
+after creating .env file in root directory write command in this directory:
 ```
-docker-compose -f docker-compose.override.yml up --build
+docker-compose -f docker-compose.yaml up --build
 ```
 
-server will run in ```http://localhost:8081```
+server will run in ```http://localhost:8080```
+
+## Standart launching with docker
+To run application in testmode with standart params write in root directory
+```
+docker-compose -f docker-compose.override.yaml up --build
+```
 

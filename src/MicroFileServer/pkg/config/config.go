@@ -26,14 +26,14 @@ type DBConfig struct {
 
 type AuthConfig struct {
 	KeyURL   		string 	`envconfig:"MFS_AUTH_KEY_URL" json:"keyUrl"`
-	Audience 		string 	`envconfig:"MFS_AUTH_AUDIENCE" json:"audience"`
+	Audience 		string 	`default:"itlab" envconfig:"MFS_AUTH_AUDIENCE" json:"audience"`
 	Issuer   		string 	`envconfig:"MFS_AUTH_ISSUER" json:"issuer"`
 	*RolesConfig			`json:"roles"`
 }
 
 type RolesConfig struct {
-	UserRole		string	`envconfig:"MFS_AUTH_ROLE_USER" json:"user"`
-	AdminRole		string	`envconfig:"MFS_AUTH_ROLE_ADMIN" json:"admin"`
+	UserRole		string	`default:"user" envconfig:"MFS_AUTH_ROLE_USER" json:"user"`
+	AdminRole		string	`default:"mfs.admin" envconfig:"MFS_AUTH_ROLE_ADMIN" json:"admin"`
 }
 
 type AppConfig struct {
@@ -49,7 +49,7 @@ func GetConfig() *Config {
 		log.Warn("Don't find .env file")
 	}
 
-	data, err := ioutil.ReadFile("config.json")
+	data, err := ioutil.ReadFile("./config.json")
 	if err != nil {
 		log.WithFields(log.Fields{
 			"function": "GetConfig.ReadFile",
@@ -66,7 +66,7 @@ func GetConfig() *Config {
 		).Warn("Can't correctly parse json from config.json")
 	}
 
-	data, err = ioutil.ReadFile("auth_config.json")
+	data, err = ioutil.ReadFile("./auth_config.json")
 	if err != nil {
 		log.WithFields(log.Fields{
 			"function": "GetConfig.ReadFile",
@@ -91,6 +91,5 @@ func GetConfig() *Config {
 		},
 		).Fatal("Can't read env vars, shutting down...")
 	}
-
 	return &config
 }

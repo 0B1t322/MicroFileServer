@@ -3,8 +3,6 @@ services:
   api:
     environment:
       TZ: Europe/Moscow
-      MFS_AUTH_ROLE_USER: user
-      MFS_AUTH_ROLE_ADMIN: mfs.admin
       MFS_AUTH_AUDIENCE: itlab
       MFS_APP_PORT: '8080'
       MFS_APP_TEST_MODE: 'false'

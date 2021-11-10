@@ -12,4 +12,5 @@ RUN GOOS=linux go build -a -installsuffix cgo -o main .
 FROM alpine:latest
 WORKDIR /root/
 COPY --from=builder /go/src/MFS/main .
-CMD ["./main"]
+
+CMD ./main
